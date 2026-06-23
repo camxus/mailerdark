@@ -1,0 +1,7 @@
+{
+  "crons": [
+    { "path": "/api/cron/campaign-sender", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/automation-engine", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/dns-verifier", "schedule": "*/15 * * * *" }
+  ]
+}

@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/*
+  Mailerdark design tokens.
+  Palette is warm-neutral + a single "flow" teal accent, with amber/green/red
+  reserved strictly for DNS/job status (pending/valid/invalid, sent/failed).
+  Swap --font-sans/--font-mono for next/font-loaded Inter + JetBrains Mono
+  in production; system stacks are used here so the project builds with no
+  network access to a font CDN.
+*/
+:root {
+  --color-ink: #14171a;
+  --color-ink-soft: #4b5358;
+  --color-canvas: #f6f5f1;
+  --color-surface: #ffffff;
+  --color-line: #e4e2dc;
+  --color-teal: #0e7c7b;
+  --color-teal-dark: #0a5f5e;
+  --color-teal-soft: #e3f1f0;
+  --color-amber: #c77d17;
+  --color-amber-soft: #faf0e1;
+  --color-green: #2f7d4f;
+  --color-green-soft: #e8f3ec;
+  --color-red: #c03b2b;
+  --color-red-soft: #fbeae7;
+}
+
+@theme inline {
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-canvas: var(--color-canvas);
+  --color-surface: var(--color-surface);
+  --color-line: var(--color-line);
+  --color-teal: var(--color-teal);
+  --color-teal-dark: var(--color-teal-dark);
+  --color-teal-soft: var(--color-teal-soft);
+  --color-amber: var(--color-amber);
+  --color-amber-soft: var(--color-amber-soft);
+  --color-green: var(--color-green);
+  --color-green-soft: var(--color-green-soft);
+  --color-red: var(--color-red);
+  --color-red-soft: var(--color-red-soft);
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}

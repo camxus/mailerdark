@@ -1,0 +1,340 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ──────────────────────────────────────────────────────────
+// Tenancy
+// ──────────────────────────────────────────────────────────
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  members     WorkspaceMember[]
+  subscribers Subscriber[]
+  groups      Group[]
+  fields      Field[]
+  campaigns   Campaign[]
+  automations Automation[]
+  domains     SendingDomain[]
+  apiKeys     ApiKey[]
+  events      Event[]
+
+  @@map("workspaces")
+}
+
+// Mirrors Supabase auth.users — id must match auth.users.id
+model User {
+  id        String   @id
+  email     String   @unique
+  fullName  String?  @map("full_name")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  memberships WorkspaceMember[]
+
+  @@map("users")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model WorkspaceMember {
+  workspaceId String   @map("workspace_id")
+  userId      String   @map("user_id")
+  role        Role     @default(MEMBER)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+// ──────────────────────────────────────────────────────────
+// Subscribers, Fields, Groups
+// ──────────────────────────────────────────────────────────
+
+enum SubscriberStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
+  BOUNCED
+  CLEANED
+}
+
+model Subscriber {
+  id             String           @id @default(uuid())
+  workspaceId    String           @map("workspace_id")
+  email          String
+  status         SubscriberStatus @default(SUBSCRIBED)
+  customFields   Json             @default("{}") @map("custom_fields")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  unsubscribedAt DateTime?        @map("unsubscribed_at")
+
+  workspace      Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  groups         SubscriberGroup[]
+  emailJobs      EmailJob[]
+  automationRuns AutomationRun[]
+
+  @@unique([workspaceId, email])
+  @@map("subscribers")
+}
+
+enum FieldType {
+  TEXT
+  NUMBER
+  DATE
+  BOOLEAN
+}
+
+model Field {
+  id          String    @id @default(uuid())
+  workspaceId String    @map("workspace_id")
+  key         String
+  label       String
+  type        FieldType
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, key])
+  @@map("fields")
+}
+
+model Group {
+  id          String   @id @default(uuid())
+  workspaceId String   @map("workspace_id")
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  subscribers SubscriberGroup[]
+
+  @@unique([workspaceId, name])
+  @@map("groups")
+}
+
+model SubscriberGroup {
+  subscriberId String   @map("subscriber_id")
+  groupId      String   @map("group_id")
+  addedAt      DateTime @default(now()) @map("added_at")
+
+  subscriber Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  group      Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([subscriberId, groupId])
+  @@map("subscriber_groups")
+}
+
+// ──────────────────────────────────────────────────────────
+// Campaigns
+// ──────────────────────────────────────────────────────────
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  FAILED
+  PAUSED
+}
+
+model Campaign {
+  id          String         @id @default(uuid())
+  workspaceId String         @map("workspace_id")
+  subject     String
+  fromName    String         @map("from_name")
+  fromEmail   String         @map("from_email")
+  replyTo     String?        @map("reply_to")
+  htmlContent String         @map("html_content")
+  status      CampaignStatus @default(DRAFT)
+  audience    Json
+  scheduledAt DateTime?      @map("scheduled_at")
+  sentAt      DateTime?      @map("sent_at")
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  emailJobs EmailJob[]
+
+  @@map("campaigns")
+}
+
+// ──────────────────────────────────────────────────────────
+// Automations
+// ──────────────────────────────────────────────────────────
+
+enum AutomationStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+}
+
+enum TriggerType {
+  SUBSCRIBER_ADDED_TO_GROUP
+  FIELD_CHANGED
+  SUBSCRIBER_CREATED
+  CAMPAIGN_OPENED
+  CAMPAIGN_CLICKED
+  DATE_BASED
+}
+
+model Automation {
+  id             String           @id @default(uuid())
+  workspaceId    String           @map("workspace_id")
+  name           String
+  status         AutomationStatus @default(DRAFT)
+  triggerType    TriggerType      @map("trigger_type")
+  flowDefinition Json             @map("flow_definition")
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  runs      AutomationRun[]
+
+  @@map("automations")
+}
+
+enum RunStatus {
+  RUNNING
+  WAITING
+  COMPLETED
+  EXITED
+  FAILED
+}
+
+model AutomationRun {
+  id            String    @id @default(uuid())
+  automationId  String    @map("automation_id")
+  subscriberId  String    @map("subscriber_id")
+  status        RunStatus @default(RUNNING)
+  currentNodeId String?   @map("current_node_id")
+  resumeAt      DateTime? @map("resume_at")
+  startedAt     DateTime  @default(now()) @map("started_at")
+  finishedAt    DateTime? @map("finished_at")
+
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  subscriber Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  emailJobs  EmailJob[]
+
+  @@map("automation_runs")
+}
+
+// ──────────────────────────────────────────────────────────
+// Sending & Tracking
+// ──────────────────────────────────────────────────────────
+
+enum JobStatus {
+  QUEUED
+  SENT
+  FAILED
+  BOUNCED
+}
+
+model EmailJob {
+  id                String    @id @default(uuid())
+  workspaceId       String    @map("workspace_id")
+  subscriberId      String    @map("subscriber_id")
+  campaignId        String?   @map("campaign_id")
+  automationRunId   String?   @map("automation_run_id")
+  status            JobStatus @default(QUEUED)
+  providerMessageId String?   @map("provider_message_id")
+  error             String?
+  queuedAt          DateTime  @default(now()) @map("queued_at")
+  sentAt            DateTime? @map("sent_at")
+
+  subscriber    Subscriber     @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  campaign      Campaign?      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  automationRun AutomationRun? @relation(fields: [automationRunId], references: [id], onDelete: Cascade)
+  events        EmailEvent[]
+
+  @@map("email_jobs")
+}
+
+enum EventType {
+  OPEN
+  CLICK
+  BOUNCE
+  COMPLAINT
+  UNSUBSCRIBE
+}
+
+model EmailEvent {
+  id         String    @id @default(uuid())
+  jobId      String    @map("job_id")
+  type       EventType
+  metadata   Json      @default("{}")
+  occurredAt DateTime  @default(now()) @map("occurred_at")
+
+  job EmailJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("email_events")
+}
+
+// ──────────────────────────────────────────────────────────
+// Sending Domains & API Access
+// ──────────────────────────────────────────────────────────
+
+enum DnsStatus {
+  PENDING
+  VALID
+  INVALID
+}
+
+model SendingDomain {
+  id             String    @id @default(uuid())
+  workspaceId    String    @map("workspace_id")
+  domain         String
+  resendDomainId String?   @map("resend_domain_id")
+  dnsRecords     Json?     @map("dns_records")
+  spfStatus      DnsStatus @default(PENDING) @map("spf_status")
+  dkimStatus     DnsStatus @default(PENDING) @map("dkim_status")
+  dmarcStatus    DnsStatus @default(PENDING) @map("dmarc_status")
+  verifiedAt     DateTime? @map("verified_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, domain])
+  @@map("sending_domains")
+}
+
+model ApiKey {
+  id          String    @id @default(uuid())
+  workspaceId String    @map("workspace_id")
+  name        String
+  hashedKey   String    @map("hashed_key")
+  scopes      String[]
+  createdAt   DateTime  @default(now()) @map("created_at")
+  lastUsedAt  DateTime? @map("last_used_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+// ──────────────────────────────────────────────────────────
+// Event Log (EventBus persistence)
+// ──────────────────────────────────────────────────────────
+
+model Event {
+  id          String   @id @default(uuid())
+  workspaceId String   @map("workspace_id")
+  type        String
+  payload     Json
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("events")
+}
