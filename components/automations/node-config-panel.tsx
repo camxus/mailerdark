@@ -1,10 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { X, Plus, Trash2 } from "lucide-react";
 import { Input, Label } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useGroups } from "@/lib/queries/groups";
 import type { AutomationNodeData, FilterNodeData } from "@/lib/automations/types";
+
+const HtmlEditor = dynamic(
+  () => import("@/components/ui/html-editor").then((m) => m.HtmlEditor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-40 items-center justify-center rounded-md border border-line bg-canvas text-xs text-ink-soft">
+        Loading editor…
+      </div>
+    ),
+  }
+);
 
 export function NodeConfigPanel({
   nodeId,
@@ -146,8 +159,11 @@ function SendEmailConfig({ data, patch }: { data: Extract<AutomationNodeData, { 
       <div><Label>Reply-to (optional)</Label><Input type="email" value={data.replyTo ?? ""} onChange={(e) => patch({ replyTo: e.target.value || undefined })} /></div>
       <div>
         <Label>HTML content</Label>
-        <textarea rows={8} value={data.htmlContent} onChange={(e) => patch({ htmlContent: e.target.value })}
-          className="w-full rounded-md border border-line bg-surface px-3 py-2 font-mono text-xs text-ink" />
+        <HtmlEditor
+          value={data.htmlContent}
+          onChange={(v) => patch({ htmlContent: v })}
+          minHeight="200px"
+        />
       </div>
     </div>
   );

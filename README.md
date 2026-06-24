@@ -100,4 +100,3 @@ This project was scaffolded in a sandboxed environment without general internet 
 
 - `npx prisma generate` needs to download a platform-specific query engine binary from Prisma's CDN — this works normally wherever you run it with full internet access.
 - `npm run build` / `npm run dev` should be run after step 3 above; the project type-checks cleanly once the Prisma client is generated (verified here with `tsc --noEmit` against everything except the Prisma-generated types themselves, which only exist after `prisma generate` runs).
-# mailerdark

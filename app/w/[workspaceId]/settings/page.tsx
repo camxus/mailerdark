@@ -23,6 +23,12 @@ export default async function SettingsPage({
       available: true,
     },
     {
+      href: `/w/${workspaceId}/settings/ai`,
+      title: "AI & Integrations",
+      description: "Connect OpenRouter or a custom OpenAI-compatible endpoint for the campaign AI Editor.",
+      available: true,
+    },
+    {
       href: `/w/${workspaceId}/settings/domains`,
       title: "Sending domains",
       description: "Verify SPF/DKIM/DMARC for your sending domain.",

@@ -163,3 +163,9 @@ create policy "api_keys_select" on public.api_keys
 
 create policy "events_select" on public.events
   for select using (public.is_workspace_member(workspace_id));
+
+-- workspace_settings — RLS policy (added with WorkspaceSettings model)
+alter table public.workspace_settings enable row level security;
+create policy "workspace_settings_rw" on public.workspace_settings
+  for all using (public.is_workspace_member(workspace_id))
+  with check (public.is_workspace_member(workspace_id));

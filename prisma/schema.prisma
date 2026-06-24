@@ -27,8 +27,32 @@ model Workspace {
   domains     SendingDomain[]
   apiKeys     ApiKey[]
   events      Event[]
+  settings    WorkspaceSettings?
 
   @@map("workspaces")
+}
+
+// ──────────────────────────────────────────────────────────
+// Workspace-level settings (one row per workspace)
+// ──────────────────────────────────────────────────────────
+
+model WorkspaceSettings {
+  workspaceId    String   @id @map("workspace_id")
+  // AI integration — stored server-side so keys are never in the browser
+  aiMode         String   @default("openrouter") @map("ai_mode")
+  openRouterKey  String?  @map("open_router_key")
+  customEndpoint String?  @map("custom_endpoint")
+  customKey      String?  @map("custom_key")
+  selectedModel  String   @default("openai/gpt-4o-mini") @map("selected_model")
+  // General
+  fromName       String?  @map("from_name")
+  fromEmail      String?  @map("from_email")
+  timezone       String   @default("UTC")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("workspace_settings")
 }
 
 // Mirrors Supabase auth.users — id must match auth.users.id

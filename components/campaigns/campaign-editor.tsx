@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, Send, Calendar, Pause, Trash2, MoreHorizontal, MailX, UserPlus, Copy } from "lucide-react";
+import {
+  ArrowLeft, Send, Calendar, Pause, Trash2,
+  MoreHorizontal, MailX, UserPlus, Copy,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Label, FieldError } from "@/components/ui/input";
@@ -12,19 +16,26 @@ import { AudienceFilter, type AudienceValue } from "@/components/audience/audien
 import { TestSendDialog } from "./test-send-dialog";
 import { ScheduleDialog } from "./schedule-dialog";
 import {
-  useCampaign,
-  useUpdateCampaign,
-  useDeleteCampaign,
-  usePreviewCampaign,
-  useSendCampaignNow,
-  usePauseCampaign,
-  useCampaignStats,
-  useResendCampaign,
-  type CampaignStatus,
-  type ResendMode,
+  useCampaign, useUpdateCampaign, useDeleteCampaign,
+  usePreviewCampaign, useSendCampaignNow, usePauseCampaign,
+  useCampaignStats, useResendCampaign,
+  type CampaignStatus, type ResendMode,
 } from "@/lib/queries/campaigns";
 
-type Tab = "compose" | "audience" | "preview";
+// SplitEditorPane contains CodeMirror + browser-only APIs
+const SplitEditorPane = dynamic(
+  () => import("./editor/split-editor-pane").then((m) => m.SplitEditorPane),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[620px] items-center justify-center rounded-lg border border-line bg-canvas text-sm text-ink-soft">
+        Loading editor…
+      </div>
+    ),
+  }
+);
+
+type Tab = "compose" | "audience";
 
 const statusTone: Record<CampaignStatus, "neutral" | "teal" | "amber" | "green" | "red"> = {
   DRAFT: "neutral",
@@ -37,15 +48,7 @@ const statusTone: Record<CampaignStatus, "neutral" | "teal" | "amber" | "green" 
 
 export function CampaignEditor({ workspaceId, campaignId }: { workspaceId: string; campaignId: string }) {
   const { data: campaign, isLoading } = useCampaign(workspaceId, campaignId);
-
-  if (isLoading || !campaign) {
-    return <p className="text-sm text-ink-soft">Loading…</p>;
-  }
-
-  // Keying on the campaign id (+ updatedAt-ish field) means the form below
-  // remounts — and re-initializes its state from the freshly loaded
-  // campaign — whenever you navigate to a different campaign, without
-  // needing an effect to sync server data into local state.
+  if (isLoading || !campaign) return <p className="text-sm text-ink-soft">Loading…</p>;
   return <CampaignEditorForm key={campaignId} workspaceId={workspaceId} campaign={campaign} />;
 }
 
@@ -58,13 +61,16 @@ function CampaignEditorForm({
 }) {
   const router = useRouter();
   const campaignId = campaign.id;
+
   const updateCampaign = useUpdateCampaign(workspaceId, campaignId);
   const deleteCampaign = useDeleteCampaign(workspaceId);
   const previewCampaign = usePreviewCampaign(workspaceId, campaignId);
   const sendNow = useSendCampaignNow(workspaceId, campaignId);
   const pauseCampaign = usePauseCampaign(workspaceId, campaignId);
   const resendCampaign = useResendCampaign(workspaceId, campaignId);
+
   const isLive = campaign.status !== "DRAFT";
+
   const { data: stats } = useCampaignStats(workspaceId, campaignId, {
     pollMs: campaign.status === "SENDING" ? 4000 : undefined,
   });
@@ -79,14 +85,30 @@ function CampaignEditorForm({
   const [showTestSend, setShowTestSend] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
 
+  // Live preview HTML — updated from the server (with merge-field substitution)
+  // when the editor is idle for 1.5s, or falls back to raw content while waiting.
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounce preview refresh so we aren't calling the server on every keystroke
+  useEffect(() => {
+    if (previewTimer.current) clearTimeout(previewTimer.current);
+    previewTimer.current = setTimeout(async () => {
+      const result = await previewCampaign.mutateAsync({}).catch(() => null);
+      if (result) setPreviewHtml(result.html);
+    }, 1500);
+    return () => {
+      if (previewTimer.current) clearTimeout(previewTimer.current);
+    };
+    // We only want this to run when htmlContent changes, not on every re-render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [htmlContent]);
+
   async function handleSave() {
     await updateCampaign.mutateAsync({
-      subject,
-      fromName,
-      fromEmail,
+      subject, fromName, fromEmail,
       replyTo: replyTo || undefined,
-      htmlContent,
-      audience,
+      htmlContent, audience,
     });
   }
 
@@ -96,18 +118,19 @@ function CampaignEditorForm({
     router.push(`/w/${workspaceId}/campaigns`);
   }
 
-  async function handlePreview() {
-    setTab("preview");
-    await previewCampaign.mutateAsync({});
-  }
-
   async function handleResend(mode: ResendMode) {
     const result = await resendCampaign.mutateAsync(mode);
     router.push(`/w/${workspaceId}/campaigns/${result.id}/edit`);
   }
 
+  const anyError =
+    updateCampaign.error?.message ||
+    sendNow.error?.message ||
+    resendCampaign.error?.message;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* ── Back + title ── */}
       <button
         onClick={() => router.push(`/w/${workspaceId}/campaigns`)}
         className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink"
@@ -120,6 +143,7 @@ function CampaignEditorForm({
           <h1 className="text-xl font-semibold text-ink">{subject || "Untitled campaign"}</h1>
           <Badge tone={statusTone[campaign.status]}>{campaign.status.toLowerCase()}</Badge>
         </div>
+
         <div className="flex gap-2">
           {campaign.status === "DRAFT" && (
             <button
@@ -157,7 +181,11 @@ function CampaignEditorForm({
             </Button>
           )}
           {(campaign.status === "SENDING" || campaign.status === "SCHEDULED") && (
-            <Button variant="secondary" onClick={() => pauseCampaign.mutate()} disabled={pauseCampaign.isPending}>
+            <Button
+              variant="secondary"
+              onClick={() => pauseCampaign.mutate()}
+              disabled={pauseCampaign.isPending}
+            >
               <Pause size={15} /> Pause
             </Button>
           )}
@@ -165,7 +193,8 @@ function CampaignEditorForm({
             <DropdownMenu
               trigger={
                 <Button variant="secondary" disabled={resendCampaign.isPending}>
-                  <MoreHorizontal size={15} /> {resendCampaign.isPending ? "Creating…" : "More"}
+                  <MoreHorizontal size={15} />
+                  {resendCampaign.isPending ? "Creating…" : "More"}
                 </Button>
               }
               items={[
@@ -193,8 +222,9 @@ function CampaignEditorForm({
         </div>
       </div>
 
-      <FieldError>{updateCampaign.error?.message || sendNow.error?.message || resendCampaign.error?.message}</FieldError>
+      {anyError && <FieldError>{anyError}</FieldError>}
 
+      {/* ── Live stats (while sending) ── */}
       {stats && isLive && (
         <Card className="grid grid-cols-5 divide-x divide-line p-0">
           <Stat label="Sent" value={stats.sent} />
@@ -205,13 +235,16 @@ function CampaignEditorForm({
         </Card>
       )}
 
+      {/* ── Tabs ── */}
       <div className="flex gap-1 border-b border-line">
-        {(["compose", "audience", "preview"] as Tab[]).map((t) => (
+        {(["compose", "audience"] as Tab[]).map((t) => (
           <button
             key={t}
-            onClick={() => (t === "preview" ? handlePreview() : setTab(t))}
+            onClick={() => setTab(t)}
             className={`px-3 py-2 text-sm font-medium capitalize transition-colors ${
-              tab === t ? "border-b-2 border-teal text-teal-dark" : "text-ink-soft hover:text-ink"
+              tab === t
+                ? "border-b-2 border-teal text-teal-dark"
+                : "text-ink-soft hover:text-ink"
             }`}
           >
             {t}
@@ -219,95 +252,72 @@ function CampaignEditorForm({
         ))}
       </div>
 
+      {/* ── Compose tab ── */}
       {tab === "compose" && (
-        <Card className="space-y-4 p-5">
-          <div>
-            <Label htmlFor="subject">Subject</Label>
-            <Input
-              id="subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              disabled={isLive}
-              placeholder="Your subject line — supports {{first_name}} merge fields"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="fromName">From name</Label>
-              <Input id="fromName" value={fromName} onChange={(e) => setFromName(e.target.value)} disabled={isLive} />
+        <div className="space-y-4">
+          {/* From / Subject row — compact, above the split pane */}
+          <Card className="p-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="subject">Subject</Label>
+                <Input
+                  id="subject"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  disabled={isLive}
+                  placeholder="Your subject line — {{first_name}} merge fields work here"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="fromName">From name</Label>
+                  <Input id="fromName" value={fromName} onChange={(e) => setFromName(e.target.value)} disabled={isLive} />
+                </div>
+                <div>
+                  <Label htmlFor="fromEmail">From email</Label>
+                  <Input id="fromEmail" type="email" value={fromEmail} onChange={(e) => setFromEmail(e.target.value)} disabled={isLive} />
+                </div>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="fromEmail">From email</Label>
-              <Input
-                id="fromEmail"
-                type="email"
-                value={fromEmail}
-                onChange={(e) => setFromEmail(e.target.value)}
-                disabled={isLive}
-              />
+            <div className="mt-3 flex items-center gap-6">
+              <div className="flex-1">
+                <Label htmlFor="replyTo">Reply-to (optional)</Label>
+                <Input id="replyTo" type="email" value={replyTo} onChange={(e) => setReplyTo(e.target.value)} disabled={isLive} />
+              </div>
+              <p className="mt-5 text-xs text-ink-soft">
+                Verify DNS →{" "}
+                <a href={`/w/${workspaceId}/settings/domains`} className="text-teal hover:text-teal-dark underline">
+                  Settings → Sending domains
+                </a>
+              </p>
             </div>
-          </div>
-          <div>
-            <Label htmlFor="replyTo">Reply-to (optional)</Label>
-            <Input id="replyTo" type="email" value={replyTo} onChange={(e) => setReplyTo(e.target.value)} disabled={isLive} />
-          </div>
-          <p className="text-xs text-ink-soft">
-            Sending domain DNS verification (SPF/DKIM/DMARC) is managed under Settings once that build phase lands —
-            for now, use a domain your provider already trusts.
-          </p>
-          <div>
-            <Label htmlFor="html">Email content (HTML)</Label>
-            <textarea
-              id="html"
-              value={htmlContent}
-              onChange={(e) => setHtmlContent(e.target.value)}
-              disabled={isLive}
-              rows={14}
-              className="w-full rounded-md border border-line bg-surface px-3 py-2 font-mono text-sm text-ink disabled:opacity-60"
-            />
-            <p className="mt-1 text-xs text-ink-soft">
-              Use <code className="font-mono">{"{{field_key}}"}</code> for any custom field, or{" "}
-              <code className="font-mono">{"{{email}}"}</code> for the subscriber&apos;s address.
-            </p>
-          </div>
-        </Card>
+          </Card>
+
+          {/* Split pane: snippets | preview | code+AI */}
+          <SplitEditorPane
+            workspaceId={workspaceId}
+            value={htmlContent}
+            onChange={setHtmlContent}
+            previewHtml={previewHtml}
+            disabled={isLive}
+          />
+        </div>
       )}
 
+      {/* ── Audience tab ── */}
       {tab === "audience" && (
         <Card className="p-5">
           <AudienceFilter workspaceId={workspaceId} value={audience} onChange={setAudience} />
         </Card>
       )}
 
-      {tab === "preview" && (
-        <Card className="p-5">
-          {previewCampaign.isPending ? (
-            <p className="text-sm text-ink-soft">Rendering…</p>
-          ) : previewCampaign.data ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <Eye size={14} className="text-ink-soft" />
-                <span className="text-ink-soft">
-                  Previewing as <strong className="text-ink">{previewCampaign.data.previewedAs}</strong>
-                  {previewCampaign.data.usingSampleData && " (sample data — no matching subscriber yet)"}
-                </span>
-              </div>
-              <p className="text-sm font-medium text-ink">{previewCampaign.data.subject}</p>
-              <iframe
-                title="Email preview"
-                sandbox=""
-                srcDoc={previewCampaign.data.html}
-                className="h-[480px] w-full rounded-md border border-line bg-white"
-              />
-            </div>
-          ) : (
-            <Button onClick={handlePreview}>Render preview</Button>
-          )}
-        </Card>
-      )}
-
+      {/* ── Dialogs ── */}
       {showTestSend && (
-        <TestSendDialog workspaceId={workspaceId} campaignId={campaignId} onClose={() => setShowTestSend(false)} />
+        <TestSendDialog
+          workspaceId={workspaceId}
+          campaignId={campaignId}
+          onClose={() => setShowTestSend(false)}
+        />
       )}
       {showSchedule && (
         <ScheduleDialog
