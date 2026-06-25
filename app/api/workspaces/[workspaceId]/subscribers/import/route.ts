@@ -36,6 +36,7 @@ export const POST = withErrorHandling(async (req: Request, { params }: RoutePara
       data: {
         workspaceId,
         email: row.email,
+        // @ts-expect-error Prisma Json type is incompatible with Record<string, unknown>
         customFields: row.customFields ?? {},
         groups: body.groupIds
           ? { create: body.groupIds.map((groupId) => ({ groupId })) }

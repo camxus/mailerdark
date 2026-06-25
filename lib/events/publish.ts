@@ -24,6 +24,7 @@ export async function publishEvent(
   payload: Record<string, unknown>
 ) {
   return db.event.create({
+    // @ts-expect-error Prisma Json type is incompatible with Record<string, unknown>
     data: { workspaceId, type, payload },
   });
 }

@@ -53,29 +53,34 @@ export const PATCH = withErrorHandling(async (req: Request, { params }: RoutePar
   const existing = await db.subscriber.findFirst({ where: { id, workspaceId } });
   if (!existing) return fail(404, "NOT_FOUND", "Subscriber not found.");
 
-  const subscriber = await db.subscriber.update({
+  await db.subscriber.update({
     where: { id },
     data: {
       ...body,
+      // @ts-expect-error Prisma Json type is incompatible with Record<string, unknown>
       customFields: body.customFields
         ? { ...(existing.customFields as object), ...body.customFields }
         : undefined,
       unsubscribedAt: body.status === "UNSUBSCRIBED" ? new Date() : undefined,
     },
+  });
+
+  const updated = await db.subscriber.findFirst({
+    where: { id },
     include: { groups: { include: { group: true } } },
   });
 
-  await publishEvent(workspaceId, "subscriber:updated", { subscriberId: subscriber.id });
+  await publishEvent(workspaceId, "subscriber:updated", { subscriberId: updated!.id });
   if (body.status === "UNSUBSCRIBED") {
-    await publishEvent(workspaceId, "subscriber:unsubscribed", { subscriberId: subscriber.id });
+    await publishEvent(workspaceId, "subscriber:unsubscribed", { subscriberId: updated!.id });
   }
 
   return ok({
-    id: subscriber.id,
-    email: subscriber.email,
-    status: subscriber.status,
-    customFields: subscriber.customFields,
-    groups: subscriber.groups.map((g) => ({ id: g.group.id, name: g.group.name })),
+    id: updated!.id,
+    email: updated!.email,
+    status: updated!.status,
+    customFields: updated!.customFields,
+    groups: updated!.groups.map((g) => ({ id: g.group.id, name: g.group.name })),
   });
 });
 

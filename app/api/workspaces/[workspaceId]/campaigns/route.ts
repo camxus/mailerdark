@@ -44,6 +44,7 @@ export const POST = withErrorHandling(async (req: Request, { params }: RoutePara
       fromEmail: body.fromEmail,
       replyTo: body.replyTo,
       htmlContent: body.htmlContent,
+      // @ts-expect-error Prisma Json type is incompatible with application Audience type
       audience: body.audience ?? {},
     },
   });

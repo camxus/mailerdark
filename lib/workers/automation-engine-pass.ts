@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, TriggerType } from "@prisma/client";
 import { advanceRun } from "@/lib/automations/engine";
 import { renderCampaignEmail } from "@/lib/email/render";
 import { getEmailProvider } from "@/lib/email/get-provider";
@@ -143,8 +143,8 @@ async function advanceRuns(db: PrismaClient) {
   }
 }
 
-function eventTypeToTrigger(eventType: string): string | null {
-  const map: Record<string, string> = {
+function eventTypeToTrigger(eventType: string): TriggerType | null {
+  const map: Record<string, TriggerType> = {
     "subscriber:created": "SUBSCRIBER_CREATED",
     "subscriber:group-added": "SUBSCRIBER_ADDED_TO_GROUP",
     "subscriber:updated": "FIELD_CHANGED",

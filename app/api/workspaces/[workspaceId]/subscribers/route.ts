@@ -64,22 +64,27 @@ export const POST = withErrorHandling(async (req: Request, { params }: RoutePara
     return fail(409, "SUBSCRIBER_EXISTS", "A subscriber with this email already exists.");
   }
 
-  const subscriber = await db.subscriber.create({
+  const created = await db.subscriber.create({
     data: {
       workspaceId,
       email: body.email,
       status: body.status ?? "SUBSCRIBED",
+      // @ts-expect-error Prisma Json type is incompatible with Record<string, unknown>
       customFields: body.customFields ?? {},
       groups: body.groupIds
         ? { create: body.groupIds.map((groupId) => ({ groupId })) }
         : undefined,
     },
+  });
+
+  const subscriber = await db.subscriber.findFirst({
+    where: { id: created.id },
     include: { groups: { include: { group: true } } },
   });
 
-  await publishEvent(workspaceId, "subscriber:created", { subscriberId: subscriber.id });
+  await publishEvent(workspaceId, "subscriber:created", { subscriberId: subscriber!.id });
 
-  return ok(serializeSubscriber(subscriber), 201);
+  return ok(serializeSubscriber(subscriber!), 201);
 });
 
 function serializeSubscriber(

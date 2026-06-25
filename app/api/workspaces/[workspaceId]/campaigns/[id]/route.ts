@@ -29,7 +29,14 @@ export const PATCH = withErrorHandling(async (req: Request, { params }: RoutePar
 
   const body = updateCampaignSchema.parse(await req.json());
 
-  const campaign = await db.campaign.update({ where: { id }, data: body });
+  const campaign = await db.campaign.update({
+    where: { id },
+    data: {
+      ...body,
+      // @ts-expect-error Prisma Json type is incompatible with application Audience type
+      audience: body.audience,
+    },
+  });
 
   return ok(campaign);
 });
