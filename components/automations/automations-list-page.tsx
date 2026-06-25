@@ -7,12 +7,13 @@ import { Plus, Trash2, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Modal } from "@/components/ui/modal";
-import { Input, Label, FieldError } from "@/components/ui/input";
+import { AutomationTemplateSelector } from "./automation-template-selector";
 import {
   useAutomations, useCreateAutomation, useDeleteAutomation,
   type AutomationStatus,
 } from "@/lib/queries/automations";
+import type { AutomationTemplate } from "@/lib/templates/automation-templates";
+import type { FlowDefinition } from "@/lib/automations/types";
 
 const statusTone: Record<AutomationStatus, "neutral" | "teal" | "amber" | "green" | "red"> = {
   DRAFT: "neutral",
@@ -33,7 +34,17 @@ export function AutomationsListPage({ workspaceId }: { workspaceId: string }) {
   const router = useRouter();
   const { data: automations, isLoading } = useAutomations(workspaceId);
   const deleteAutomation = useDeleteAutomation(workspaceId);
-  const [showCreate, setShowCreate] = useState(false);
+  const createAutomation = useCreateAutomation(workspaceId);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+
+  async function handleCreate(template: AutomationTemplate | null) {
+    const automation = await createAutomation.mutateAsync({
+      name: "Untitled automation",
+      triggerType: "SUBSCRIBER_CREATED",
+      flowDefinition: template?.flowDefinition ?? { nodes: [], edges: [] },
+    } as { name: string; triggerType: string; flowDefinition: FlowDefinition });
+    router.push(`/w/${workspaceId}/automations/${automation.id}/build`);
+  }
 
   return (
     <div className="space-y-6">
@@ -44,8 +55,8 @@ export function AutomationsListPage({ workspaceId }: { workspaceId: string }) {
             Build flows that react to subscriber behaviour — no code needed.
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus size={16} /> New automation
+        <Button onClick={() => setShowTemplateSelector(true)} disabled={createAutomation.isPending}>
+          <Plus size={16} /> {createAutomation.isPending ? "Creating…" : "New automation"}
         </Button>
       </div>
 
@@ -56,7 +67,7 @@ export function AutomationsListPage({ workspaceId }: { workspaceId: string }) {
           <EmptyState
             title="No automations yet"
             description="Automations send emails, add subscribers to groups, and more — triggered automatically by events."
-            action={<Button onClick={() => setShowCreate(true)}>New automation</Button>}
+            action={<Button onClick={() => setShowTemplateSelector(true)}>New automation</Button>}
           />
         ) : (
           <table className="w-full text-sm">
@@ -115,64 +126,12 @@ export function AutomationsListPage({ workspaceId }: { workspaceId: string }) {
         )}
       </Card>
 
-      {showCreate && (
-        <CreateAutomationDialog
-          workspaceId={workspaceId}
-          onClose={() => setShowCreate(false)}
-          onCreated={(id) => router.push(`/w/${workspaceId}/automations/${id}/build`)}
+      {showTemplateSelector && (
+        <AutomationTemplateSelector
+          onSelect={handleCreate}
+          onClose={() => setShowTemplateSelector(false)}
         />
       )}
     </div>
-  );
-}
-
-function CreateAutomationDialog({
-  workspaceId,
-  onClose,
-  onCreated,
-}: {
-  workspaceId: string;
-  onClose: () => void;
-  onCreated: (id: string) => void;
-}) {
-  const [name, setName] = useState("Untitled automation");
-  const [triggerType, setTriggerType] = useState("SUBSCRIBER_CREATED");
-  const createAutomation = useCreateAutomation(workspaceId);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const automation = await createAutomation.mutateAsync({ name, triggerType });
-    onCreated(automation.id);
-  }
-
-  return (
-    <Modal title="New automation" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label htmlFor="name">Name</Label>
-          <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="trigger">Trigger</Label>
-          <select
-            id="trigger"
-            value={triggerType}
-            onChange={(e) => setTriggerType(e.target.value)}
-            className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink"
-          >
-            {Object.entries(triggerLabels).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
-        </div>
-        <FieldError>{createAutomation.error?.message}</FieldError>
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={createAutomation.isPending}>
-            {createAutomation.isPending ? "Creating…" : "Create & build"}
-          </Button>
-        </div>
-      </form>
-    </Modal>
   );
 }

@@ -1,12 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { TemplateSelector } from "./template-selector";
 import { useCampaigns, useCreateCampaign, type CampaignStatus } from "@/lib/queries/campaigns";
+import type { CampaignTemplate } from "@/lib/templates/campaign-templates";
 
 const statusTone: Record<CampaignStatus, "neutral" | "teal" | "amber" | "green" | "red"> = {
   DRAFT: "neutral",
@@ -21,9 +24,13 @@ export function CampaignsListPage({ workspaceId }: { workspaceId: string }) {
   const router = useRouter();
   const { data: campaigns, isLoading } = useCampaigns(workspaceId);
   const createCampaign = useCreateCampaign(workspaceId);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 
-  async function handleCreate() {
-    const campaign = await createCampaign.mutateAsync();
+  async function handleCreate(template: CampaignTemplate | null) {
+    const campaign = await createCampaign.mutateAsync({
+      subject: template?.subject ?? "Untitled campaign",
+      htmlContent: template?.html ?? "<p>Write your email here…</p>",
+    });
     router.push(`/w/${workspaceId}/campaigns/${campaign.id}/edit`);
   }
 
@@ -34,7 +41,7 @@ export function CampaignsListPage({ workspaceId }: { workspaceId: string }) {
           <h1 className="text-xl font-semibold text-ink">Campaigns</h1>
           <p className="mt-1 text-sm text-ink-soft">Compose and send one-off emails to your audience.</p>
         </div>
-        <Button onClick={handleCreate} disabled={createCampaign.isPending}>
+        <Button onClick={() => setShowTemplateSelector(true)} disabled={createCampaign.isPending}>
           <Plus size={16} /> {createCampaign.isPending ? "Creating…" : "New campaign"}
         </Button>
       </div>
@@ -46,7 +53,7 @@ export function CampaignsListPage({ workspaceId }: { workspaceId: string }) {
           <EmptyState
             title="No campaigns yet"
             description="Create your first campaign to send a one-off email to your subscribers."
-            action={<Button onClick={handleCreate}>New campaign</Button>}
+            action={<Button onClick={() => setShowTemplateSelector(true)}>New campaign</Button>}
           />
         ) : (
           <table className="w-full text-sm">
@@ -54,6 +61,7 @@ export function CampaignsListPage({ workspaceId }: { workspaceId: string }) {
               <tr className="border-b border-line text-left text-ink-soft">
                 <th className="px-4 py-3 font-medium">Subject</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Preview</th>
                 <th className="px-4 py-3 font-medium">Recipients</th>
                 <th className="px-4 py-3 font-medium">Created</th>
               </tr>
@@ -72,6 +80,15 @@ export function CampaignsListPage({ workspaceId }: { workspaceId: string }) {
                   <td className="px-4 py-3">
                     <Badge tone={statusTone[c.status]}>{c.status.toLowerCase()}</Badge>
                   </td>
+                  <td className="px-4 py-3">
+                    <div className="h-12 w-24 overflow-hidden rounded border border-line bg-canvas">
+                      <iframe
+                        src={`/w/${workspaceId}/campaigns/${c.id}/preview`}
+                        className="h-full w-full scale-50"
+                        style={{ transformOrigin: "top left", pointerEvents: "none" }}
+                      />
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-ink-soft">{c.jobCount || "—"}</td>
                   <td className="px-4 py-3 text-ink-soft">
                     {new Date(c.createdAt).toLocaleDateString()}
@@ -82,6 +99,13 @@ export function CampaignsListPage({ workspaceId }: { workspaceId: string }) {
           </table>
         )}
       </Card>
+
+      {showTemplateSelector && (
+        <TemplateSelector
+          onSelect={handleCreate}
+          onClose={() => setShowTemplateSelector(false)}
+        />
+      )}
     </div>
   );
 }

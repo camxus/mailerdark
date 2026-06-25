@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, ExternalLink } from "lucide-react";
 import { Input, Label } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useGroups } from "@/lib/queries/groups";
 import type { AutomationNodeData, FilterNodeData } from "@/lib/automations/types";
+import Link from "next/link";
 
 const HtmlEditor = dynamic(
   () => import("@/components/ui/html-editor").then((m) => m.HtmlEditor),
@@ -23,12 +25,14 @@ export function NodeConfigPanel({
   nodeId,
   data,
   workspaceId,
+  automationId,
   onUpdate,
   onClose,
 }: {
   nodeId: string;
   data: AutomationNodeData;
   workspaceId: string;
+  automationId: string;
   onUpdate: (nodeId: string, newData: AutomationNodeData) => void;
   onClose: () => void;
 }) {
@@ -48,7 +52,7 @@ export function NodeConfigPanel({
         {data.type === "trigger" && <TriggerConfig data={data} patch={patch} />}
         {data.type === "filter" && <FilterConfig data={data} patch={patch} />}
         {data.type === "delay" && <DelayConfig data={data} patch={patch} />}
-        {data.type === "sendEmail" && <SendEmailConfig data={data} patch={patch} />}
+        {data.type === "sendEmail" && <SendEmailConfig data={data} patch={patch} workspaceId={workspaceId} automationId={automationId} nodeId={nodeId} />}
         {(data.type === "addToGroup" || data.type === "removeFromGroup") && (
           <GroupActionConfig data={data} workspaceId={workspaceId} patch={patch} />
         )}
@@ -150,7 +154,9 @@ function DelayConfig({ data, patch }: { data: Extract<AutomationNodeData, { type
 
 // ── Send Email ──────────────────────────────────────
 
-function SendEmailConfig({ data, patch }: { data: Extract<AutomationNodeData, { type: "sendEmail" }>; patch: (p: object) => void }) {
+function SendEmailConfig({ data, patch, workspaceId, automationId, nodeId }: { data: Extract<AutomationNodeData, { type: "sendEmail" }>; patch: (p: object) => void; workspaceId: string; automationId: string; nodeId: string }) {
+  const [showFullEditor, setShowFullEditor] = useState(false);
+
   return (
     <div className="space-y-3">
       <div><Label>Subject</Label><Input value={data.subject} onChange={(e) => patch({ subject: e.target.value })} placeholder="Subject line (supports {{field}})" /></div>
@@ -158,12 +164,74 @@ function SendEmailConfig({ data, patch }: { data: Extract<AutomationNodeData, { 
       <div><Label>From email</Label><Input type="email" value={data.fromEmail} onChange={(e) => patch({ fromEmail: e.target.value })} /></div>
       <div><Label>Reply-to (optional)</Label><Input type="email" value={data.replyTo ?? ""} onChange={(e) => patch({ replyTo: e.target.value || undefined })} /></div>
       <div>
-        <Label>HTML content</Label>
+        <div className="mb-2 flex items-center justify-between">
+          <Label>HTML content</Label>
+          <Link
+            href={`/w/${workspaceId}/automations/${automationId}/node-email/${nodeId}`}
+            className="rounded-md p-1 text-ink-soft hover:bg-canvas"
+            title="Open email editor page"
+          >
+            <ExternalLink size={14} />
+          </Link>
+        </div>
         <HtmlEditor
           value={data.htmlContent}
           onChange={(v) => patch({ htmlContent: v })}
-          minHeight="200px"
+          minHeight="120px"
         />
+        {showFullEditor && (
+          <FullEditorDialog
+            html={data.htmlContent}
+            onChange={(v) => patch({ htmlContent: v })}
+            onClose={() => setShowFullEditor(false)}
+          />
+        )}
+
+        {data.htmlContent && (
+          <div className="mt-3 rounded border border-line bg-canvas p-2">
+            <p className="mb-1 text-xs font-medium text-ink-soft">Preview</p>
+            <div
+              className="max-h-32 overflow-hidden rounded"
+              style={{ fontSize: 0 }}
+              dangerouslySetInnerHTML={{ __html: data.htmlContent }}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FullEditorDialog({
+  html,
+  onChange,
+  onClose,
+}: {
+  html: string;
+  onChange: (v: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
+      <div className="flex h-[700px] w-full max-w-5xl flex-col rounded-lg border border-line bg-surface shadow-lg">
+        <div className="flex items-center justify-between border-b border-line p-4">
+          <h2 className="text-base font-semibold text-ink">Edit email content</h2>
+          <button onClick={onClose} className="rounded-md p-1 text-ink-soft hover:bg-canvas">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="flex-1 p-4">
+          <HtmlEditor
+            value={html}
+            onChange={onChange}
+            minHeight="500px"
+          />
+        </div>
+        <div className="border-t border-line p-4">
+          <div className="flex justify-end">
+            <Button onClick={onClose}>Done</Button>
+          </div>
+        </div>
       </div>
     </div>
   );

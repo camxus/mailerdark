@@ -66,7 +66,7 @@ export function useAutomationRuns(workspaceId: string, id: string) {
 export function useCreateAutomation(workspaceId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string; triggerType: string }) =>
+    mutationFn: (input: { name: string; triggerType: string; flowDefinition?: FlowDefinition }) =>
       apiFetch<Automation>(`/api/workspaces/${workspaceId}/automations`, {
         method: "POST",
         body: JSON.stringify(input),

@@ -78,14 +78,14 @@ export function useCampaignStats(workspaceId: string, id: string, options?: { po
 export function useCreateCampaign(workspaceId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () =>
+    mutationFn: (input?: { subject?: string; fromName?: string; fromEmail?: string; htmlContent?: string }) =>
       apiFetch<Campaign>(`/api/workspaces/${workspaceId}/campaigns`, {
         method: "POST",
         body: JSON.stringify({
-          subject: "Untitled campaign",
-          fromName: "",
-          fromEmail: "",
-          htmlContent: "<p>Write your email here…</p>",
+          subject: input?.subject ?? "Untitled campaign",
+          fromName: input?.fromName ?? "",
+          fromEmail: input?.fromEmail ?? "",
+          htmlContent: input?.htmlContent ?? "<p>Write your email here…</p>",
           audience: {},
         }),
       }),
