@@ -71,7 +71,7 @@ export function buildOpenApiDocument(baseUrl: string) {
       title: "Mailerdark API",
       version: "1.0.0",
       description:
-        "Programmatic access to subscribers, groups, fields, campaigns, automations, and sending domains. " +
+        "Programmatic access to subscribers, groups, fields, campaigns, automations, sending domains, and the AI assistant. " +
         "Authenticate with `Authorization: Bearer flw_live_...` using a key created under Settings → API.",
     },
     servers: [{ url: baseUrl }],

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cx } from "@/lib/cx";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { FloatingInput } from "@/components/ai/floating-input";
 
 type WorkspaceLite = { id: string; name: string; slug: string };
 
@@ -71,6 +72,7 @@ export function DashboardShell({
       </aside>
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-5xl px-8 py-8">{children}</div>
+        <FloatingInput workspaceId={workspace.id} />
       </main>
     </div>
   );

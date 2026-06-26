@@ -100,3 +100,15 @@ export function useSetSubscriberGroup(workspaceId: string, subscriberId: string)
     },
   });
 }
+
+export function useImportSubscribers(workspaceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { subscribers: { email: string; customFields?: Record<string, unknown> }[]; groupIds?: string[] }) =>
+      apiFetch<{ created: number; skipped: number; total: number }>(`/api/workspaces/${workspaceId}/subscribers/import`, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["subscribers", workspaceId] }),
+  });
+}

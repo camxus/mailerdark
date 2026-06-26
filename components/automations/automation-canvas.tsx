@@ -17,7 +17,7 @@ import {
   Panel,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Plus } from "lucide-react";
+import { Plus, Shuffle, Timer, Mail, UserPlus, UserMinus, Flag } from "lucide-react";
 import {
   TriggerNode, FilterNode, DelayNode, SendEmailNode,
   AddToGroupNode, RemoveFromGroupNode, ExitNode,
@@ -46,23 +46,25 @@ const defaultNodeData: Record<AutomationNodeType, AutomationNodeData> = {
   exit: { type: "exit", label: "Done" },
 };
 
-const addableNodeTypes: { type: AutomationNodeType; label: string; icon: string }[] = [
-  { type: "filter", label: "Filter", icon: "🔀" },
-  { type: "delay", label: "Wait", icon: "⏱" },
-  { type: "sendEmail", label: "Send email", icon: "✉️" },
-  { type: "addToGroup", label: "Add to group", icon: "➕" },
-  { type: "removeFromGroup", label: "Remove from group", icon: "➖" },
-  { type: "exit", label: "Exit", icon: "🏁" },
+const addableNodeTypes: { type: AutomationNodeType; label: string; icon: React.ReactNode }[] = [
+  { type: "filter", label: "Filter", icon: <Shuffle size={16} /> },
+  { type: "delay", label: "Wait", icon: <Timer size={16} /> },
+  { type: "sendEmail", label: "Send email", icon: <Mail size={16} /> },
+  { type: "addToGroup", label: "Add to group", icon: <UserPlus size={16} /> },
+  { type: "removeFromGroup", label: "Remove from group", icon: <UserMinus size={16} /> },
+  { type: "exit", label: "Exit", icon: <Flag size={16} /> },
 ];
 
 export function AutomationCanvas({
   workspaceId,
+  automationId,
   initialFlow,
   readonly = false,
   onSave,
   isSaving,
 }: {
   workspaceId: string;
+  automationId: string;
   initialFlow: FlowDefinition;
   readonly?: boolean;
   onSave?: (flow: FlowDefinition) => void;
@@ -160,6 +162,7 @@ export function AutomationCanvas({
           nodeId={selectedNode.id}
           data={selectedNode.data as AutomationNodeData}
           workspaceId={workspaceId}
+          automationId={automationId}
           onUpdate={handleNodeDataUpdate}
           onClose={() => setSelectedNodeId(null)}
         />

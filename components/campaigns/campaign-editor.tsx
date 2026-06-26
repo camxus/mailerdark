@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Send, Calendar, Pause, Trash2,
@@ -13,27 +12,17 @@ import { Input, Label, FieldError } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { AudienceFilter, type AudienceValue } from "@/components/audience/audience-filter";
+import { HtmlPreviewModal } from "./editor/html-preview-modal";
 import { TestSendDialog } from "./test-send-dialog";
 import { ScheduleDialog } from "./schedule-dialog";
 import {
   useCampaign, useUpdateCampaign, useDeleteCampaign,
-  usePreviewCampaign, useSendCampaignNow, usePauseCampaign,
+  useSendCampaignNow, usePauseCampaign,
   useCampaignStats, useResendCampaign,
   type CampaignStatus, type ResendMode,
 } from "@/lib/queries/campaigns";
 
-// SplitEditorPane contains CodeMirror + browser-only APIs
-const SplitEditorPane = dynamic(
-  () => import("./editor/split-editor-pane").then((m) => m.SplitEditorPane),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-[620px] items-center justify-center rounded-lg border border-line bg-canvas text-sm text-ink-soft">
-        Loading editor…
-      </div>
-    ),
-  }
-);
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Tab = "compose" | "audience";
 
@@ -64,7 +53,6 @@ function CampaignEditorForm({
 
   const updateCampaign = useUpdateCampaign(workspaceId, campaignId);
   const deleteCampaign = useDeleteCampaign(workspaceId);
-  const previewCampaign = usePreviewCampaign(workspaceId, campaignId);
   const sendNow = useSendCampaignNow(workspaceId, campaignId);
   const pauseCampaign = usePauseCampaign(workspaceId, campaignId);
   const resendCampaign = useResendCampaign(workspaceId, campaignId);
@@ -80,29 +68,11 @@ function CampaignEditorForm({
   const [fromName, setFromName] = useState(campaign.fromName);
   const [fromEmail, setFromEmail] = useState(campaign.fromEmail);
   const [replyTo, setReplyTo] = useState(campaign.replyTo ?? "");
-  const [htmlContent, setHtmlContent] = useState(campaign.htmlContent);
+  const htmlContent = campaign.htmlContent;
   const [audience, setAudience] = useState<AudienceValue>(campaign.audience ?? {});
   const [showTestSend, setShowTestSend] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
-
-  // Live preview HTML — updated from the server (with merge-field substitution)
-  // when the editor is idle for 1.5s, or falls back to raw content while waiting.
-  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
-  const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Debounce preview refresh so we aren't calling the server on every keystroke
-  useEffect(() => {
-    if (previewTimer.current) clearTimeout(previewTimer.current);
-    previewTimer.current = setTimeout(async () => {
-      const result = await previewCampaign.mutateAsync({}).catch(() => null);
-      if (result) setPreviewHtml(result.html);
-    }, 1500);
-    return () => {
-      if (previewTimer.current) clearTimeout(previewTimer.current);
-    };
-    // We only want this to run when htmlContent changes, not on every re-render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [htmlContent]);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   async function handleSave() {
     await updateCampaign.mutateAsync({
@@ -110,6 +80,23 @@ function CampaignEditorForm({
       replyTo: replyTo || undefined,
       htmlContent, audience,
     });
+  }
+
+  async function handleSendNow() {
+    if (!fromName.trim() || !emailRegex.test(fromEmail)) {
+      alert("Please set a valid from name and email address before sending.");
+      return;
+    }
+    if (!confirm("Send this campaign now?")) return;
+    await sendNow.mutateAsync();
+  }
+
+  async function handleTestSend() {
+    if (!fromName.trim() || !emailRegex.test(fromEmail)) {
+      alert("Please set a valid from name and email address before sending tests.");
+      return;
+    }
+    setShowTestSend(true);
   }
 
   async function handleDelete() {
@@ -160,21 +147,24 @@ function CampaignEditorForm({
             </Button>
           )}
           {!isLive && (
-            <Button variant="secondary" onClick={() => setShowTestSend(true)}>
+            <Button variant="secondary" onClick={handleTestSend}>
               Send test
             </Button>
           )}
           {!isLive && (
-            <Button variant="secondary" onClick={() => setShowSchedule(true)}>
+            <Button variant="secondary" onClick={() => {
+              if (!fromName.trim() || !emailRegex.test(fromEmail)) {
+                alert("Please set a valid from name and email address before scheduling.");
+                return;
+              }
+              setShowSchedule(true);
+            }}>
               <Calendar size={15} /> Schedule
             </Button>
           )}
           {!isLive && (
             <Button
-              onClick={async () => {
-                if (!confirm("Send this campaign now?")) return;
-                await sendNow.mutateAsync();
-              }}
+              onClick={handleSendNow}
               disabled={sendNow.isPending}
             >
               <Send size={15} /> {sendNow.isPending ? "Sending…" : "Send now"}
@@ -255,7 +245,7 @@ function CampaignEditorForm({
       {/* ── Compose tab ── */}
       {tab === "compose" && (
         <div className="space-y-4">
-          {/* From / Subject row — compact, above the split pane */}
+          {/* From / Subject row */}
           <Card className="p-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -293,14 +283,32 @@ function CampaignEditorForm({
             </div>
           </Card>
 
-          {/* Split pane: snippets | preview | code+AI */}
-          <SplitEditorPane
-            workspaceId={workspaceId}
-            value={htmlContent}
-            onChange={setHtmlContent}
-            previewHtml={previewHtml}
-            disabled={isLive}
-          />
+          {/* Email preview + actions */}
+          <Card className="p-4">
+            <div className="flex items-start gap-4">
+              <div
+                onClick={() => setShowPreviewModal(true)}
+                className="cursor-pointer rounded-md border border-line bg-white p-1 hover:border-teal transition-colors"
+                style={{ width: "280px", minHeight: "180px", flexShrink: 0 }}
+              >
+                <iframe
+                  title="Email preview thumbnail"
+                  sandbox=""
+                  srcDoc={htmlContent}
+                  className="w-full border-0"
+                  style={{ height: "160px", display: "block" }}
+                />
+              </div>
+              <div className="flex-1 space-y-3">
+                <p className="text-sm text-ink-soft">
+                  This campaign currently has an email template. Click the preview to view it, or open the editor to make changes.
+                </p>
+                <Button variant="secondary" onClick={() => router.push(`/w/${workspaceId}/campaigns/${campaignId}/compose`)}>
+                  Edit email
+                </Button>
+              </div>
+            </div>
+          </Card>
         </div>
       )}
 
@@ -311,7 +319,13 @@ function CampaignEditorForm({
         </Card>
       )}
 
-      {/* ── Dialogs ── */}
+      {/* ── Modals ── */}
+      {showPreviewModal && (
+        <HtmlPreviewModal
+          value={htmlContent}
+          onClose={() => setShowPreviewModal(false)}
+        />
+      )}
       {showTestSend && (
         <TestSendDialog
           workspaceId={workspaceId}

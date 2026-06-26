@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import { ok, withErrorHandling } from "@/lib/api/response";
 import { requireWorkspaceAccess } from "@/lib/auth/require-workspace-access";
-import { createCampaignSchema } from "@/lib/validation/campaign.schema";
 
 type RouteParams = { params: Promise<{ workspaceId: string }> };
 
@@ -34,18 +33,19 @@ export const POST = withErrorHandling(async (req: Request, { params }: RoutePara
   const auth = await requireWorkspaceAccess(req, workspaceId, "campaigns:write");
   if (!auth.ok) return auth.response;
 
-  const body = createCampaignSchema.parse(await req.json());
+  const workspace = await db.workspace.findFirst({
+    where: { id: workspaceId },
+    include: { settings: true },
+  });
 
   const campaign = await db.campaign.create({
     data: {
       workspaceId,
-      subject: body.subject,
-      fromName: body.fromName,
-      fromEmail: body.fromEmail,
-      replyTo: body.replyTo,
-      htmlContent: body.htmlContent,
-      // @ts-expect-error Prisma Json type is incompatible with application Audience type
-      audience: body.audience ?? {},
+      subject: "Untitled campaign",
+      fromName: workspace?.settings?.fromName ?? "Admin",
+      fromEmail: workspace?.settings?.fromEmail ?? "noreply@example.com",
+      htmlContent: "<p>Write your email here…</p>",
+      audience: {},
     },
   });
 

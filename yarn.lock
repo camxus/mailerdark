@@ -30,7 +30,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/core@npm:^7.24.4":
+"@babel/core@npm:^7.24.4, @babel/core@npm:^7.29.7":
   version: 7.29.7
   resolution: "@babel/core@npm:7.29.7"
   dependencies:
@@ -257,8 +257,8 @@ __metadata:
   linkType: hard
 
 "@codemirror/language@npm:^6.0.0, @codemirror/language@npm:^6.4.0, @codemirror/language@npm:^6.6.0":
-  version: 6.12.3
-  resolution: "@codemirror/language@npm:6.12.3"
+  version: 6.12.4
+  resolution: "@codemirror/language@npm:6.12.4"
   dependencies:
     "@codemirror/state": "npm:^6.0.0"
     "@codemirror/view": "npm:^6.23.0"
@@ -266,7 +266,7 @@ __metadata:
     "@lezer/highlight": "npm:^1.0.0"
     "@lezer/lr": "npm:^1.0.0"
     style-mod: "npm:^4.0.0"
-  checksum: 10c0/682d476f35f187a8d2f59f9b2e561045353c87736e5774b5b8dd22ade7deb3c85b9d3cdde988b00aafb345732144c134adf45dadab067430aaee159abcc456a4
+  checksum: 10c0/1b704a66f618d96eddf5937a41996e1ab42a70b5333a90b768e5539c25b7ab822e91a93e66b14d47a886cd73b3e3e22ddf77b8f11fb2f496ebd7ba010f3c4deb
   languageName: node
   linkType: hard
 
@@ -314,14 +314,14 @@ __metadata:
   linkType: hard
 
 "@codemirror/view@npm:^6.0.0, @codemirror/view@npm:^6.17.0, @codemirror/view@npm:^6.23.0, @codemirror/view@npm:^6.27.0, @codemirror/view@npm:^6.37.0, @codemirror/view@npm:^6.42.0, @codemirror/view@npm:^6.43.1":
-  version: 6.43.2
-  resolution: "@codemirror/view@npm:6.43.2"
+  version: 6.43.3
+  resolution: "@codemirror/view@npm:6.43.3"
   dependencies:
     "@codemirror/state": "npm:^6.7.0"
     crelt: "npm:^1.0.6"
     style-mod: "npm:^4.1.0"
     w3c-keyname: "npm:^2.2.4"
-  checksum: 10c0/7e735a96bc61f774699a4fbba94c8e50b1c54d03df27fd8629fef0cb17cdf53db4320f38b2b367f8d0553b818d3eb157e55dac9c82dd9b1c78fe43062559bef7
+  checksum: 10c0/4d294569aeff07f77e01db5729fa14acfb822da6869ba95f116297f78e975b984ada324c26f972005c45f227c0534afc7475d4d6c7ff14dcea3d9133f2713e27
   languageName: node
   linkType: hard
 
@@ -3406,6 +3406,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"framer-motion@npm:^12.42.0":
+  version: 12.42.0
+  resolution: "framer-motion@npm:12.42.0"
+  dependencies:
+    motion-dom: "npm:^12.42.0"
+    motion-utils: "npm:^12.39.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    "@emotion/is-prop-valid": "*"
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@emotion/is-prop-valid":
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 10c0/c425fa953615f3a54a0a3bb1dd7030d68613436aec1357bdb8b4752e9c46e0c9afe3c6d7ec2c2e730ff1978900575060480cb57ac1957baecd35093108e711bc
+  languageName: node
+  linkType: hard
+
 "fsevents@npm:~2.3.3":
   version: 2.3.3
   resolution: "fsevents@npm:2.3.3"
@@ -4303,6 +4325,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "mailerdark@workspace:."
   dependencies:
+    "@babel/core": "npm:^7.29.7"
     "@codemirror/autocomplete": "npm:^6.20.3"
     "@codemirror/commands": "npm:^6.10.3"
     "@codemirror/lang-css": "npm:^6.3.1"
@@ -4324,12 +4347,14 @@ __metadata:
     clsx: "npm:^2.1.1"
     eslint: "npm:^9"
     eslint-config-next: "npm:16.2.9"
+    framer-motion: "npm:^12.42.0"
     lucide-react: "npm:^1.20.0"
     next: "npm:16.2.9"
     prisma: "npm:^6.19.3"
     react: "npm:19.2.4"
     react-dom: "npm:19.2.4"
     resend: "npm:^6.12.4"
+    sonner: "npm:^2.0.7"
     tailwindcss: "npm:^4"
     tsx: "npm:^4.22.4"
     typescript: "npm:^5"
@@ -4400,6 +4425,22 @@ __metadata:
   dependencies:
     minipass: "npm:^7.1.2"
   checksum: 10c0/5aad75ab0090b8266069c9aabe582c021ae53eb33c6c691054a13a45db3b4f91a7fb1bd79151e6b4e9e9a86727b522527c0a06ec7d45206b745d54cd3097bcec
+  languageName: node
+  linkType: hard
+
+"motion-dom@npm:^12.42.0":
+  version: 12.42.0
+  resolution: "motion-dom@npm:12.42.0"
+  dependencies:
+    motion-utils: "npm:^12.39.0"
+  checksum: 10c0/c6cfe46ecce0bf2ffb4dcbc5d8b92777f0507b273bddc0a7da8cf2e043ee3db3082034138d801bbd581d1111a8d12465df9d7bb21ab0ea3e35cb2aac43e08d4e
+  languageName: node
+  linkType: hard
+
+"motion-utils@npm:^12.39.0":
+  version: 12.39.0
+  resolution: "motion-utils@npm:12.39.0"
+  checksum: 10c0/6d7a2a2cc0797b72410a666a9cc1c201c8e39bf9669670464e433fe1e72af5f0217154c869867b34fbadf3664cf222c0d022bbc4eed7927f201ae971918e7440
   languageName: node
   linkType: hard
 
@@ -5262,6 +5303,16 @@ __metadata:
     side-channel-map: "npm:^1.0.1"
     side-channel-weakmap: "npm:^1.0.2"
   checksum: 10c0/dc0ab81d67f61bda9247d053ce93f41c3fd8ad2bdcb9cf9d8d2f8540d488f26d87a5e99ebfc07eea49ec025867b2452b705442d974b1478f0395e69f6bfb3270
+  languageName: node
+  linkType: hard
+
+"sonner@npm:^2.0.7":
+  version: 2.0.7
+  resolution: "sonner@npm:2.0.7"
+  peerDependencies:
+    react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+    react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+  checksum: 10c0/6966ab5e892ed6aab579a175e4a24f3b48747f0fc21cb68c3e33cb41caa7a0eebeb098c210545395e47a18d585eb8734ae7dd12d2bd18c8a3294a1ee73f997d9
   languageName: node
   linkType: hard
 

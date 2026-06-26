@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, EmptyState } from "@/components/ui/card";
@@ -11,6 +11,8 @@ import { SubscriberStatusBadge } from "@/components/ui/badge";
 import { useSubscribers } from "@/lib/queries/subscribers";
 import { useGroups } from "@/lib/queries/groups";
 import { AddSubscriberDialog } from "./add-subscriber-dialog";
+import { ImportSubscribersDialog } from "./import-subscribers-dialog";
+import { apiFetch } from "@/lib/api-fetch";
 
 export function SubscribersPage({ workspaceId }: { workspaceId: string }) {
   const searchParams = useSearchParams();
@@ -20,9 +22,24 @@ export function SubscribersPage({ workspaceId }: { workspaceId: string }) {
   );
   const [status, setStatus] = useState<string | undefined>();
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
 
   const { data, isLoading } = useSubscribers(workspaceId, { search, groupId, status });
   const { data: groups } = useGroups(workspaceId);
+
+  async function handleExport() {
+    const result = await apiFetch<{ csv: string }>(`/api/workspaces/${workspaceId}/subscribers/export`, {
+      method: "POST",
+      body: JSON.stringify({ search, groupId, status }),
+    });
+    const blob = new Blob([result.csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "subscribers.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <div className="space-y-6">
@@ -31,9 +48,17 @@ export function SubscribersPage({ workspaceId }: { workspaceId: string }) {
           <h1 className="text-xl font-semibold text-ink">Subscribers</h1>
           <p className="mt-1 text-sm text-ink-soft">Everyone in your audience, in one place.</p>
         </div>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus size={16} /> Add subscriber
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => setShowImportDialog(true)}>
+            <Plus size={16} /> Import
+          </Button>
+          <Button variant="secondary" onClick={handleExport}>
+            <FileDown size={16} /> Export
+          </Button>
+          <Button onClick={() => setShowAddDialog(true)}>
+            <Plus size={16} /> Add subscriber
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -119,6 +144,9 @@ export function SubscribersPage({ workspaceId }: { workspaceId: string }) {
 
       {showAddDialog && (
         <AddSubscriberDialog workspaceId={workspaceId} onClose={() => setShowAddDialog(false)} />
+      )}
+      {showImportDialog && (
+        <ImportSubscribersDialog workspaceId={workspaceId} onClose={() => setShowImportDialog(false)} />
       )}
     </div>
   );

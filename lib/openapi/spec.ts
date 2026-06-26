@@ -379,6 +379,50 @@ export const apiGroups: ApiGroup[] = [
       },
     ],
   },
+  {
+    name: "AI Assistant",
+    endpoints: [
+      {
+        id: "ai-command",
+        method: "POST",
+        path: "/ai/command",
+        summary: "Process natural language command",
+        description: "Accepts natural language commands (e.g., 'Create a welcome campaign for premium users') and returns a plan or requests clarification for missing fields.",
+        scope: "campaigns:write",
+        requestBodyExample: { command: "Create a welcome campaign for premium users" },
+        responseExample: { status: "needs_clarification", questions: [{ id: "audience", type: "select", label: "Who should receive this newsletter?", options: ["All Subscribers", "Premium Users", "Trial Users"] }] },
+      },
+      {
+        id: "ai-stream",
+        method: "POST",
+        path: "/ai/stream",
+        summary: "Stream command processing",
+        description: "Same as /ai/command but streams responses via Server-Sent Events for progressive updates (analyzing, planning, executing, complete).",
+        scope: "campaigns:write",
+        requestBodyExample: { command: "Find inactive subscribers and export them" },
+        responseExample: { status: "analyzing", message: "Loading workspace context..." },
+      },
+      {
+        id: "ai-generate",
+        method: "POST",
+        path: "/ai/generate",
+        summary: "Generate email content",
+        description: "Generates HTML email content using AI. Provide a prompt and optionally current HTML to edit. Returns a streaming response in Server-Sent Events format.",
+        scope: "campaigns:write",
+        requestBodyExample: { prompt: "Write a welcome email for new premium subscribers", model: "openai/gpt-4o-mini" },
+        responseExample: { data: "<html><body><h1>Welcome!</h1></body></html>" },
+      },
+      {
+        id: "ai-models",
+        method: "GET",
+        path: "/ai/models",
+        summary: "List available AI models",
+        description: "Returns available AI models sorted by cost. Requires an AI API key to be configured in workspace settings.",
+        scope: "settings:write",
+        responseExample: [{ id: "openai/gpt-4o-mini", name: "GPT-4o Mini", context_length: 128000 }],
+      },
+    ],
+  },
 ];
 
 export const allEndpoints: ApiEndpoint[] = apiGroups.flatMap((g) => g.endpoints);

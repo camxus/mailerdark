@@ -81,6 +81,7 @@ export function AutomationBuilderPage({ workspaceId, automationId }: { workspace
 
       <AutomationCanvas
         workspaceId={workspaceId}
+        automationId={automationId}
         initialFlow={automation.flowDefinition}
         readonly={!isEditable}
         onSave={isEditable ? handleSave : undefined}
