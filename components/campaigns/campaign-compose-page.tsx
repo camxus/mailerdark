@@ -14,7 +14,7 @@ const SplitEditorPane = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[620px] items-center justify-center rounded-lg border border-line bg-canvas text-sm text-ink-soft">
+      <div className="flex h-[500px] sm:h-[620px] items-center justify-center rounded-lg border border-line bg-canvas text-sm text-ink-soft">
         Loading editor…
       </div>
     ),
@@ -71,8 +71,8 @@ function CampaignComposeForm({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <button
             onClick={() => router.push(`/w/${workspaceId}/campaigns/${campaign.id}/edit`)}
             className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink"

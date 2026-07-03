@@ -143,13 +143,13 @@ function DnsRecordRow({ record }: { record: DnsRecord }) {
   }
 
   return (
-    <div className="grid grid-cols-[60px_1fr_auto] items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-1.5 text-xs">
+    <div className="grid grid-cols-1 sm:grid-cols-[60px_1fr_auto] items-start sm:items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-1.5 text-xs">
       <span className="font-mono font-semibold text-ink-soft">{record.type}</span>
       <div className="min-w-0">
         <p className="truncate font-mono text-ink">{record.name}</p>
-        <p className="truncate font-mono text-ink-soft">{record.value}</p>
+        <p className="truncate font-mono text-ink-soft break-all">{record.value}</p>
       </div>
-      <button onClick={handleCopy} className="rounded p-1 text-ink-soft hover:bg-canvas" title="Copy value">
+      <button onClick={handleCopy} className="rounded p-1 text-ink-soft hover:bg-canvas self-start sm:self-auto" title="Copy value">
         {copied ? <Check size={13} className="text-green" /> : <Copy size={13} />}
       </button>
     </div>

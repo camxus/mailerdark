@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Users,
   ListTree,
@@ -12,6 +12,8 @@ import {
   ChevronsUpDown,
   LogOut,
   LayoutDashboard,
+  Menu,
+  X,
 } from "lucide-react";
 import { cx } from "@/lib/cx";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -39,11 +41,38 @@ export function DashboardShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Close mobile nav on route change
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
 
   return (
     <div className="flex min-h-screen bg-canvas">
-      <aside className="flex w-60 flex-col border-r border-line bg-surface">
-        <div className="border-b border-line p-4">
+      {/* Mobile overlay */}
+      {mobileNavOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-ink/50 lg:hidden"
+          onClick={() => setMobileNavOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={cx(
+        "fixed inset-y-0 left-0 z-50 w-64 flex flex-col border-r border-line bg-surface transition-transform lg:relative lg:translate-x-0 lg:w-60",
+        mobileNavOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="border-b border-line p-4 flex items-center justify-between lg:hidden">
+          <span className="text-lg font-semibold tracking-tight text-ink">Mailerdark</span>
+          <button
+            onClick={() => setMobileNavOpen(false)}
+            className="rounded-md p-1.5 text-ink-soft hover:bg-canvas"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="hidden lg:block border-b border-line p-4">
           <WorkspaceSwitcher current={workspace} workspaces={workspaces} />
         </div>
         <nav className="flex-1 space-y-0.5 p-3">
@@ -67,10 +96,26 @@ export function DashboardShell({
             );
           })}
         </nav>
+        <div className="lg:hidden border-t border-line p-3">
+          <WorkspaceSwitcher current={workspace} workspaces={workspaces} />
+        </div>
         <UserMenu email={userEmail} />
       </aside>
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-5xl px-8 py-8">{children}</div>
+
+      {/* Mobile header */}
+      <header className="fixed top-0 left-0 right-0 z-30 flex h-14 items-center justify-between border-b border-line bg-surface px-4 lg:hidden">
+        <button
+          onClick={() => setMobileNavOpen(true)}
+          className="rounded-md p-1.5 text-ink-soft hover:bg-canvas"
+        >
+          <Menu size={20} />
+        </button>
+        <span className="text-lg font-semibold tracking-tight text-ink">Mailerdark</span>
+        <div className="w-9">{/* spacer */}</div>
+      </header>
+
+      <main className="flex-1 overflow-y-auto pt-14 lg:pt-0">
+        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
       </main>
     </div>
   );

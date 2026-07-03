@@ -2,6 +2,7 @@
 
 import { Handle, Position } from "@xyflow/react";
 import { cx } from "@/lib/cx";
+import type { ReactNode } from "react";
 
 export function NodeShell({
   label,
@@ -13,7 +14,7 @@ export function NodeShell({
   yesNo = false,
 }: {
   label: string;
-  icon: string;
+  icon: ReactNode;
   accent: "teal" | "amber" | "green" | "red" | "neutral";
   children?: React.ReactNode;
   hasInput?: boolean;

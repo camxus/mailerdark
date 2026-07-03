@@ -138,13 +138,13 @@ function CampaignEditorForm({
         <ArrowLeft size={15} /> Back to campaigns
       </button>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-ink">{subject || "Untitled campaign"}</h1>
           <Badge tone={statusTone[campaign.status]}>{campaign.status.toLowerCase()}</Badge>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {campaign.status === "DRAFT" && (
             <button
               onClick={handleDelete}
@@ -224,9 +224,9 @@ function CampaignEditorForm({
 
       {anyError && <FieldError>{anyError}</FieldError>}
 
-      {/* ── Live stats (while sending) ── */}
+      {/* ── Stats (while sending) ── */}
       {stats && isLive && (
-        <Card className="grid grid-cols-5 divide-x divide-line p-0">
+        <Card className="grid grid-cols-2 sm:grid-cols-5 divide-y sm:divide-x divide-line p-0">
           <Stat label="Sent" value={stats.sent} />
           <Stat label="Opens" value={`${stats.uniqueOpens} (${Math.round(stats.openRate * 100)}%)`} />
           <Stat label="Clicks" value={`${stats.uniqueClicks} (${Math.round(stats.clickRate * 100)}%)`} />
@@ -255,9 +255,9 @@ function CampaignEditorForm({
       {/* ── Compose tab ── */}
       {tab === "compose" && (
         <div className="space-y-4">
-          {/* From / Subject row — compact, above the split pane */}
+          {/* From / Subject row — responsive layout */}
           <Card className="p-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
                 <Label htmlFor="subject">Subject</Label>
                 <Input
@@ -268,7 +268,7 @@ function CampaignEditorForm({
                   placeholder="Your subject line — {{first_name}} merge fields work here"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="fromName">From name</Label>
                   <Input id="fromName" value={fromName} onChange={(e) => setFromName(e.target.value)} disabled={isLive} />
@@ -278,22 +278,19 @@ function CampaignEditorForm({
                   <Input id="fromEmail" type="email" value={fromEmail} onChange={(e) => setFromEmail(e.target.value)} disabled={isLive} />
                 </div>
               </div>
-            </div>
-            <div className="mt-3 flex items-center gap-6">
-              <div className="flex-1">
+              <div>
                 <Label htmlFor="replyTo">Reply-to (optional)</Label>
                 <Input id="replyTo" type="email" value={replyTo} onChange={(e) => setReplyTo(e.target.value)} disabled={isLive} />
+                <p className="mt-1.5 text-xs text-ink-soft">
+                  Verify DNS →{" "}
+                  <a href={`/w/${workspaceId}/settings/domains`} className="text-teal hover:text-teal-dark underline">
+                    Settings → Sending domains
+                  </a>
+                </p>
               </div>
-              <p className="mt-5 text-xs text-ink-soft">
-                Verify DNS →{" "}
-                <a href={`/w/${workspaceId}/settings/domains`} className="text-teal hover:text-teal-dark underline">
-                  Settings → Sending domains
-                </a>
-              </p>
             </div>
           </Card>
 
-          {/* Split pane: snippets | preview | code+AI */}
           <SplitEditorPane
             workspaceId={workspaceId}
             value={htmlContent}

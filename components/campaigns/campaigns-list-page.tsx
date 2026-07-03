@@ -36,7 +36,7 @@ export function CampaignsListPage({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-ink">Campaigns</h1>
           <p className="mt-1 text-sm text-ink-soft">Compose and send one-off emails to your audience.</p>
@@ -56,47 +56,54 @@ export function CampaignsListPage({ workspaceId }: { workspaceId: string }) {
             action={<Button onClick={() => setShowTemplateSelector(true)}>New campaign</Button>}
           />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-ink-soft">
-                <th className="px-4 py-3 font-medium">Subject</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Preview</th>
-                <th className="px-4 py-3 font-medium">Recipients</th>
-                <th className="px-4 py-3 font-medium">Created</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {campaigns.map((c) => (
-                <tr key={c.id} className="hover:bg-canvas">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/w/${workspaceId}/campaigns/${c.id}/edit`}
-                      className="font-medium text-ink hover:text-teal-dark"
-                    >
-                      {c.subject || "Untitled campaign"}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge tone={statusTone[c.status]}>{c.status.toLowerCase()}</Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="h-12 w-24 overflow-hidden rounded border border-line bg-canvas">
-                      <iframe
-                        src={`/w/${workspaceId}/campaigns/${c.id}/preview`}
-                        className="h-full w-full scale-50"
-                        style={{ transformOrigin: "top left", pointerEvents: "none" }}
-                      />
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-ink-soft">{c.jobCount || "—"}</td>
-                  <td className="px-4 py-3 text-ink-soft">
-                    {new Date(c.createdAt).toLocaleDateString()}
-                  </td>
+          <div className="table-container">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left text-ink-soft">
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium">Subject</th>
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden sm:table-cell">Status</th>
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden md:table-cell">Preview</th>
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden lg:table-cell">Recipients</th>
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden lg:table-cell">Created</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {campaigns.map((c) => (
+                  <tr key={c.id} className="hover:bg-canvas">
+                    <td className="px-3 py-2 sm:px-4 sm:py-3">
+                      <div>
+                        <Link
+                          href={`/w/${workspaceId}/campaigns/${c.id}/edit`}
+                          className="font-medium text-ink hover:text-teal-dark"
+                        >
+                          {c.subject || "Untitled campaign"}
+                        </Link>
+                        <div className="mt-1 sm:hidden">
+                          <Badge tone={statusTone[c.status]}>{c.status.toLowerCase()}</Badge>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 hidden sm:table-cell">
+                      <Badge tone={statusTone[c.status]}>{c.status.toLowerCase()}</Badge>
+                    </td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 hidden md:table-cell">
+                      <div className="h-12 w-24 overflow-hidden rounded border border-line bg-canvas">
+                        <iframe
+                          src={`/w/${workspaceId}/campaigns/${c.id}/preview`}
+                          className="h-full w-full scale-50"
+                          style={{ transformOrigin: "top left", pointerEvents: "none" }}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 text-ink-soft hidden lg:table-cell">{c.jobCount || "—"}</td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 text-ink-soft hidden lg:table-cell">
+                      {new Date(c.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
 

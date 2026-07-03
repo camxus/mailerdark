@@ -50,18 +50,18 @@ export function AutomationTemplateSelector({
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               onClick={() => setSelectedId("scratch")}
               className={`rounded-lg border p-3 text-left transition-all ${
                 selectedId === "scratch" ? "border-teal bg-teal-soft" : "border-line hover:bg-canvas"
               }`}
             >
-              <div className="mb-2 flex h-24 items-center justify-center rounded bg-canvas">
+              <div className="mb-2 flex h-20 items-center justify-center rounded bg-canvas">
                 <div className="text-center">
                   <div className="mb-1 text-xs font-medium text-ink">Start from scratch</div>
-                  <div className="text-ink-soft" style={{ fontSize: 24 }}>+</div>
+                  <div className="text-ink-soft" style={{ fontSize: 20 }}>+</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -81,7 +81,7 @@ export function AutomationTemplateSelector({
                   selectedId === t.id ? "border-teal bg-teal-soft" : "border-line hover:bg-canvas"
                 }`}
               >
-                <div className="mb-2 h-24 rounded bg-canvas p-2">
+                <div className="mb-2 h-20 rounded bg-canvas p-2">
                   <div className="text-xs text-ink">{t.name}</div>
                   <div className="mt-1 text-ink-soft" style={{ fontSize: 10 }}>
                     {t.flowDefinition.nodes.length} nodes
@@ -99,8 +99,8 @@ export function AutomationTemplateSelector({
           </div>
         </div>
 
-        <div className="border-t border-line p-4">
-          <div className="flex justify-end gap-2">
+        <div className="border-t border-line p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-end gap-2">
             <button
               onClick={onClose}
               className="rounded-md px-3 py-1.5 text-sm font-medium text-ink-soft hover:bg-canvas"

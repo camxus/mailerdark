@@ -22,7 +22,7 @@ export function GroupsPage({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-ink">Groups</h1>
           <p className="mt-1 text-sm text-ink-soft">Segment subscribers for campaigns and automations.</p>
@@ -42,48 +42,53 @@ export function GroupsPage({ workspaceId }: { workspaceId: string }) {
             action={<Button onClick={() => setDialogGroup("new")}>Create group</Button>}
           />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-ink-soft">
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Description</th>
-                <th className="px-4 py-3 font-medium">Subscribers</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {groups.map((g) => (
-                <tr key={g.id} className="hover:bg-canvas">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/w/${workspaceId}/subscribers?groupId=${g.id}`}
-                      className="font-medium text-ink hover:text-teal-dark"
-                    >
-                      {g.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-ink-soft">{g.description || "—"}</td>
-                  <td className="px-4 py-3 text-ink-soft">{g.subscriberCount}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
-                      <button
-                        onClick={() => setDialogGroup(g)}
-                        className="rounded-md p-1.5 text-ink-soft hover:bg-canvas hover:text-ink"
-                      >
-                        <Pencil size={15} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(g)}
-                        className="rounded-md p-1.5 text-ink-soft hover:bg-red-soft hover:text-red"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="table-container">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left text-ink-soft">
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium">Name</th>
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden sm:table-cell">Description</th>
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden md:table-cell">Subscribers</th>
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 hidden lg:table-cell"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {groups.map((g) => (
+                  <tr key={g.id} className="hover:bg-canvas">
+                    <td className="px-3 py-2 sm:px-4 sm:py-3">
+                      <div>
+                        <Link
+                          href={`/w/${workspaceId}/subscribers?groupId=${g.id}`}
+                          className="font-medium text-ink hover:text-teal-dark"
+                        >
+                          {g.name}
+                        </Link>
+                        <div className="mt-1 sm:hidden text-xs text-ink-soft">{g.description || "—"}</div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 text-ink-soft hidden sm:table-cell">{g.description || "—"}</td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 text-ink-soft hidden md:table-cell">{g.subscriberCount}</td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 hidden lg:table-cell">
+                      <div className="flex justify-end gap-1">
+                        <button
+                          onClick={() => setDialogGroup(g)}
+                          className="rounded-md p-1.5 text-ink-soft hover:bg-canvas hover:text-ink"
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(g)}
+                          className="rounded-md p-1.5 text-ink-soft hover:bg-red-soft hover:text-red"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
 

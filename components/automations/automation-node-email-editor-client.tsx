@@ -14,7 +14,7 @@ const SplitEditorPane = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[620px] items-center justify-center rounded-lg border border-line bg-canvas text-sm text-ink-soft">
+      <div className="flex h-[500px] sm:h-[620px] items-center justify-center rounded-lg border border-line bg-canvas text-sm text-ink-soft">
         Loading editor…
       </div>
     ),
@@ -70,17 +70,19 @@ export function AutomationNodeEmailEditorClient({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.push(`/w/${workspaceId}/automations/${automationId}/build`)}
-          className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink"
-        >
-          <ArrowLeft size={15} /> Back to builder
-        </button>
-        <Badge tone={statusTone[automation.status] ?? "neutral"}>{automation.status.toLowerCase()}</Badge>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <button
+            onClick={() => router.push(`/w/${workspaceId}/automations/${automationId}/build`)}
+            className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink"
+          >
+            <ArrowLeft size={15} /> Back to builder
+          </button>
+          <Badge tone={statusTone[automation.status] ?? "neutral"}>{automation.status.toLowerCase()}</Badge>
+        </div>
       </div>
 
-      <div className="flex h-[620px] overflow-hidden rounded-lg border border-line">
+      <div className="flex flex-col overflow-hidden rounded-lg border border-line">
         <SplitEditorPane
           workspaceId={workspaceId}
           value={htmlContent}

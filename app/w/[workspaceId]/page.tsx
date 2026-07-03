@@ -28,14 +28,14 @@ export default async function DashboardHomePage({
         <p className="mt-1 text-sm text-ink-soft">A quick look at your audience.</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="responsive-grid">
         <StatCard label="Total subscribers" value={subscriberCount} />
         <StatCard label="Subscribed" value={subscribedCount} />
         <StatCard label="Groups" value={groupCount} />
       </div>
 
       <div>
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <h2 className="text-sm font-semibold text-ink">Recently added</h2>
           <Link href={`/w/${workspaceId}/subscribers`} className="text-sm font-medium text-teal hover:text-teal-dark">
             View all
@@ -47,7 +47,7 @@ export default async function DashboardHomePage({
           ) : (
             <ul className="divide-y divide-line">
               {recentSubscribers.map((s) => (
-                <li key={s.id} className="flex items-center justify-between px-4 py-3">
+                <li key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-3 py-3 sm:px-4 sm:py-3">
                   <span className="text-sm text-ink">{s.email}</span>
                   <SubscriberStatusBadge status={s.status} />
                 </li>

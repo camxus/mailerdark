@@ -10,7 +10,7 @@ export function ApiDocsPage({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-ink">API & documentation</h1>
           <p className="mt-1 text-sm text-ink-soft">
@@ -21,7 +21,7 @@ export function ApiDocsPage({ workspaceId }: { workspaceId: string }) {
           href="/api/openapi"
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-1.5 text-sm font-medium text-teal hover:text-teal-dark"
+          className="flex items-center gap-1.5 text-sm font-medium text-teal hover:text-teal-dark w-full sm:w-auto justify-center sm:justify-start"
         >
           <FileJson size={15} /> OpenAPI spec (JSON)
         </a>
@@ -33,7 +33,7 @@ export function ApiDocsPage({ workspaceId }: { workspaceId: string }) {
         <h2 className="mb-1 text-sm font-semibold text-ink">Endpoints</h2>
         <p className="mb-4 text-sm text-ink-soft">
           All requests are scoped to this workspace and authenticated with{" "}
-          <code className="rounded bg-canvas px-1 py-0.5 font-mono text-xs">Authorization: Bearer flw_live_…</code>
+          <code className="rounded bg-canvas px-1 py-0.5 font-mono text-xs break-all">Authorization: Bearer flw_live_…</code>
         </p>
         <EndpointBrowser workspaceId={workspaceId} defaultApiKey={lastCreatedKey} />
       </div>

@@ -21,9 +21,9 @@ export function Modal({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-4">
-      <div className="w-full max-w-md rounded-lg border border-line bg-surface p-5 shadow-lg">
-        <div className="mb-4 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
+      <div className="w-full max-w-sm sm:max-w-md rounded-lg border border-line bg-surface p-4 sm:p-5 shadow-lg">
+        <div className="mb-3 sm:mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-ink">{title}</h2>
           <button onClick={onClose} className="rounded-md p-1 text-ink-soft hover:bg-canvas">
             <X size={18} />

@@ -31,8 +31,8 @@ export function MembersPage({ workspaceId }: { workspaceId: string }) {
         ) : (
           <ul className="divide-y divide-line">
             {members?.map((m) => (
-              <li key={m.userId} className="flex items-center justify-between px-4 py-3">
-                <span className="text-sm text-ink">{m.email}</span>
+              <li key={m.userId} className="flex flex-col sm:flex-row sm:items-center justify-between px-3 py-3 sm:px-4 sm:py-3 gap-2">
+                <span className="text-sm text-ink truncate">{m.email}</span>
                 <Badge tone={m.role === "OWNER" ? "teal" : "neutral"}>{m.role.toLowerCase()}</Badge>
               </li>
             ))}
@@ -46,18 +46,19 @@ export function MembersPage({ workspaceId }: { workspaceId: string }) {
           They need a Mailerdark account already — invite-by-email for new accounts arrives once
           outbound sending is wired up.
         </p>
-        <form onSubmit={handleSubmit} className="flex items-start gap-2">
-          <div className="flex-1">
+        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-start gap-2">
+          <div className="w-full sm:flex-1">
             <Input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="teammate@example.com"
+              className="w-full"
             />
             <FieldError>{addMember.error?.message}</FieldError>
           </div>
-          <Button type="submit" disabled={addMember.isPending}>
+          <Button type="submit" disabled={addMember.isPending} className="w-full sm:w-auto">
             {addMember.isPending ? "Adding…" : "Add"}
           </Button>
         </form>

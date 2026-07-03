@@ -212,22 +212,22 @@ function FullEditorDialog({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
-      <div className="flex h-[700px] w-full max-w-5xl flex-col rounded-lg border border-line bg-surface shadow-lg">
-        <div className="flex items-center justify-between border-b border-line p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-2 sm:p-4">
+      <div className="flex h-[500px] sm:h-[700px] w-full max-w-5xl flex-col rounded-lg border border-line bg-surface shadow-lg">
+        <div className="flex items-center justify-between border-b border-line p-3 sm:p-4">
           <h2 className="text-base font-semibold text-ink">Edit email content</h2>
           <button onClick={onClose} className="rounded-md p-1 text-ink-soft hover:bg-canvas">
             <X size={18} />
           </button>
         </div>
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-2 sm:p-4">
           <HtmlEditor
             value={html}
             onChange={onChange}
-            minHeight="500px"
+            minHeight="300px"
           />
         </div>
-        <div className="border-t border-line p-4">
+        <div className="border-t border-line p-3 sm:p-4">
           <div className="flex justify-end">
             <Button onClick={onClose}>Done</Button>
           </div>

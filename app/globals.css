@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@layer utilities {
+  /* Responsive table wrapper */
+  .table-container {
+    @apply w-full overflow-x-auto -mx-4 sm:mx-0 sm:rounded-lg sm:border sm:border-line;
+  }
+  
+  /* Mobile-first responsive grid */
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+}
+
 /*
   Mailerdark design tokens.
   Palette is warm-neutral + a single "flow" teal accent, with amber/green/red

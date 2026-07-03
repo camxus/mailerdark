@@ -48,6 +48,7 @@ export function SplitEditorPane({
 }) {
   const [tab, setTab] = useState<EditorTab>("code");
   const [showSnippets, setShowSnippets] = useState(true);
+  const [showSnippetsMobile, setShowSnippetsMobile] = useState(false);
   const [showEditor, setShowEditor] = useState(true);
   const [previewSize, setPreviewSize] = useState<PreviewSize>("desktop");
   const editorInsertRef = useRef<((code: string) => void) | null>(null);
@@ -68,18 +69,31 @@ export function SplitEditorPane({
   }
 
   return (
-    <div className={cx("flex h-[620px] overflow-hidden rounded-lg border border-line", className)}>
+    <div className={cx("flex flex-col h-[500px] sm:h-[620px] overflow-hidden rounded-lg border border-line", className)}>
       {/* ── Snippets sidebar ── */}
       {showSnippets && !disabled && (
-        <SnippetsSidebar workspaceId={workspaceId} onInsert={handleSnippetInsert} />
+        <div className={cx("absolute inset-y-0 left-0 z-10 w-full sm:w-64 flex-col border-r border-line bg-surface transition-transform", showSnippetsMobile ? "flex" : "hidden sm:flex")}>
+          <SnippetsSidebar workspaceId={workspaceId} onInsert={handleSnippetInsert} />
+        </div>
       )}
 
       {/* ── Preview pane ── */}
       <div className={cx("flex flex-1 flex-col min-w-0", !showEditor && "border-r-0")}>
-        <div className="flex items-center gap-2 border-b border-line bg-canvas px-3 py-1.5">
-          <Eye size={13} className="text-ink-soft" />
-          <span className="text-xs font-medium text-ink-soft">Preview</span>
-          <div className="ml-auto flex items-center gap-1">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 border-b border-line bg-canvas px-2 py-2 sm:px-3 sm:py-1.5">
+          <div className="flex items-center gap-2">
+            {!disabled && (
+              <button
+                onClick={() => setShowSnippetsMobile((v) => !v)}
+                className="sm:hidden rounded p-1 text-ink-soft hover:bg-surface"
+                title={showSnippetsMobile ? "Hide snippets" : "Show snippets"}
+              >
+                {showSnippetsMobile ? <PanelLeftClose size={15} /> : <PanelLeftOpen size={15} />}
+              </button>
+            )}
+            <Eye size={13} className="text-ink-soft" />
+            <span className="text-xs font-medium text-ink-soft">Preview</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1">
             {previewSizes.map((size) => (
               <button
                 key={size.id}
@@ -99,7 +113,7 @@ export function SplitEditorPane({
           {!disabled && (
             <button
               onClick={() => setShowSnippets((v) => !v)}
-              className="ml-1 rounded p-1 text-ink-soft hover:bg-surface"
+              className="hidden sm:inline-block ml-1 rounded p-1 text-ink-soft hover:bg-surface"
               title={showSnippets ? "Hide snippets" : "Show snippets"}
             >
               {showSnippets
@@ -109,7 +123,7 @@ export function SplitEditorPane({
           )}
           <button
             onClick={() => setShowEditor((v) => !v)}
-            className="ml-1 rounded p-1 text-ink-soft hover:bg-surface"
+            className="ml-auto rounded p-1 text-ink-soft hover:bg-surface"
             title={showEditor ? "Collapse editor" : "Expand editor"}
           >
             {showEditor
@@ -132,7 +146,7 @@ export function SplitEditorPane({
 
       {/* ── Code / AI editor pane ── */}
       {showEditor && (
-        <div className="flex w-[52%] flex-col min-w-0">
+        <div className="w-full sm:w-[52%] flex flex-col min-w-0">
           {/* Tab bar */}
           <div className="flex items-center border-b border-line bg-surface">
             {([
@@ -143,7 +157,7 @@ export function SplitEditorPane({
                 key={id}
                 onClick={() => setTab(id)}
                 className={cx(
-                  "flex items-center gap-1.5 px-4 py-2 text-xs font-medium transition-colors",
+                  "flex items-center gap-1.5 px-3 py-2 sm:px-4 text-xs font-medium transition-colors",
                   tab === id
                     ? "border-b-2 border-teal text-teal-dark bg-teal-soft/40"
                     : "text-ink-soft hover:text-ink hover:bg-canvas"

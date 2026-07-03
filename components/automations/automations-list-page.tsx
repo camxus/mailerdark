@@ -48,7 +48,7 @@ export function AutomationsListPage({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-ink">Automations</h1>
           <p className="mt-1 text-sm text-ink-soft">
@@ -70,59 +70,79 @@ export function AutomationsListPage({ workspaceId }: { workspaceId: string }) {
             action={<Button onClick={() => setShowTemplateSelector(true)}>New automation</Button>}
           />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-ink-soft">
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Trigger</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Active runs</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {automations.map((a) => (
-                <tr key={a.id} className="hover:bg-canvas">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/w/${workspaceId}/automations/${a.id}/build`}
-                      className="font-medium text-ink hover:text-teal-dark"
-                    >
-                      {a.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-ink-soft">
-                    {triggerLabels[a.triggerType] ?? a.triggerType}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge tone={statusTone[a.status as AutomationStatus]}>
-                      {a.status.toLowerCase()}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-ink-soft">{a.activeRuns}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
-                      <button
-                        onClick={() => router.push(`/w/${workspaceId}/automations/${a.id}/build`)}
-                        className="rounded-md p-1.5 text-ink-soft hover:bg-canvas hover:text-ink"
-                        title="Open builder"
-                      >
-                        {a.status === "ACTIVE" ? <Pause size={15} /> : <Play size={15} />}
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm(`Delete "${a.name}"?`)) deleteAutomation.mutate(a.id);
-                        }}
-                        className="rounded-md p-1.5 text-ink-soft hover:bg-red-soft hover:text-red"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="table-container">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left text-ink-soft">
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium">Name</th>
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden sm:table-cell">Trigger</th>
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden md:table-cell">Status</th>
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden lg:table-cell">Active runs</th>
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 hidden lg:table-cell"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {automations.map((a) => (
+                  <tr key={a.id} className="hover:bg-canvas">
+                    <td className="px-3 py-2 sm:px-4 sm:py-3">
+                      <div>
+                        <Link
+                          href={`/w/${workspaceId}/automations/${a.id}/build`}
+                          className="font-medium text-ink hover:text-teal-dark"
+                        >
+                          {a.name}
+                        </Link>
+                        <div className="mt-1 md:hidden">
+                          <Badge tone={statusTone[a.status as AutomationStatus]}>
+                            {a.status.toLowerCase()}
+                          </Badge>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 text-ink-soft hidden sm:table-cell">
+                      {triggerLabels[a.triggerType] ?? a.triggerType}
+                    </td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 hidden md:table-cell">
+                      <Badge tone={statusTone[a.status as AutomationStatus]}>
+                        {a.status.toLowerCase()}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 text-ink-soft hidden lg:table-cell">{a.activeRuns}</td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 hidden lg:table-cell">
+                      <div className="flex justify-end gap-1">
+                        <button
+                          onClick={() => router.push(`/w/${workspaceId}/automations/${a.id}/build`)}
+                          className="rounded-md p-1.5 text-ink-soft hover:bg-canvas hover:text-ink"
+                          title="Open builder"
+                        >
+                          {a.status === "ACTIVE" ? <Pause size={15} /> : <Play size={15} />}
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete "${a.name}"?`)) deleteAutomation.mutate(a.id);
+                          }}
+                          className="rounded-md p-1.5 text-ink-soft hover:bg-red-soft hover:text-red"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 lg:hidden">
+                      <div className="flex justify-end gap-1">
+                        <button
+                          onClick={() => router.push(`/w/${workspaceId}/automations/${a.id}/build`)}
+                          className="rounded-md p-1.5 text-ink-soft hover:bg-canvas hover:text-ink"
+                          title="Open builder"
+                        >
+                          {a.status === "ACTIVE" ? <Pause size={15} /> : <Play size={15} />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
 

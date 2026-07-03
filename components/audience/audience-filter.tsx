@@ -154,9 +154,9 @@ export function AudienceFilter({
 
       {fields && fields.length > 0 && (
         <div>
-          <div className="mb-2 flex items-center justify-between">
+          <div className="mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <p className="text-sm font-medium text-ink">Match by field</p>
-            <Button type="button" variant="ghost" onClick={addFilter} className="!px-2 !py-1 text-xs">
+            <Button type="button" variant="ghost" onClick={addFilter} className="!px-2 !py-1 text-xs w-full sm:w-auto">
               <Plus size={13} /> Add condition
             </Button>
           </div>
@@ -165,11 +165,11 @@ export function AudienceFilter({
           ) : (
             <div className="space-y-2">
               {fieldFilters.map((filter, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <select
                     value={filter.fieldKey}
                     onChange={(e) => updateFilter(index, { fieldKey: e.target.value })}
-                    className="rounded-md border border-line bg-surface px-2 py-1.5 text-sm text-ink"
+                    className="w-full sm:w-auto rounded-md border border-line bg-surface px-2 py-1.5 text-sm text-ink"
                   >
                     {fields.map((f) => (
                       <option key={f.key} value={f.key}>
@@ -182,7 +182,7 @@ export function AudienceFilter({
                     onChange={(e) =>
                       updateFilter(index, { operator: e.target.value as FieldFilter["operator"] })
                     }
-                    className="rounded-md border border-line bg-surface px-2 py-1.5 text-sm text-ink"
+                    className="w-full sm:w-auto rounded-md border border-line bg-surface px-2 py-1.5 text-sm text-ink"
                   >
                     {Object.entries(operatorLabels).map(([op, label]) => (
                       <option key={op} value={op}>
@@ -194,14 +194,14 @@ export function AudienceFilter({
                     <Input
                       value={String(filter.value ?? "")}
                       onChange={(e) => updateFilter(index, { value: e.target.value })}
-                      className="!py-1.5"
+                      className="!py-1.5 w-full sm:w-auto"
                       placeholder="Value"
                     />
                   )}
                   <button
                     type="button"
                     onClick={() => removeFilter(index)}
-                    className="rounded-md p-1.5 text-ink-soft hover:bg-red-soft hover:text-red"
+                    className="rounded-md p-1.5 text-ink-soft hover:bg-red-soft hover:text-red w-full sm:w-auto"
                   >
                     <X size={14} />
                   </button>

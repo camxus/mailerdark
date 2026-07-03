@@ -49,7 +49,7 @@ export default async function SettingsPage({
         <p className="mt-1 text-sm text-ink-soft">Workspace configuration.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {sections.map((s) => (
           <Card key={s.href} className="p-4">
             {s.available ? (

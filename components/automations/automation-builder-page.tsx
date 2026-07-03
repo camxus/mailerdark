@@ -42,7 +42,7 @@ export function AutomationBuilderPage({ workspaceId, automationId }: { workspace
 
   const isEditable = automation.status !== "ACTIVE";
 
-  async function handleSave(flow: FlowDefinition) {
+async function handleSave(flow: FlowDefinition) {
     await updateAutomation.mutateAsync({ flowDefinition: flow });
   }
 
@@ -55,17 +55,17 @@ export function AutomationBuilderPage({ workspaceId, automationId }: { workspace
         <ArrowLeft size={15} /> Back to automations
       </button>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-ink">{automation.name}</h1>
           <Badge tone={statusTone[automation.status as AutomationStatus]}>
             {automation.status.toLowerCase()}
           </Badge>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {automation.status === "ACTIVE" ? (
-            <Button variant="secondary" onClick={() => pauseAutomation.mutate()} disabled={pauseAutomation.isPending}>
-              <Pause size={15} /> {pauseAutomation.isPending ? "Pausing…" : "Pause"}
+            <Button variant="secondary" onClick={() => pauseCampaign.mutate()} disabled={pauseCampaign.isPending}>
+              <Pause size={15} /> {pauseCampaign.isPending ? "Pausing…" : "Pause"}
             </Button>
           ) : (
             <Button onClick={() => activateAutomation.mutate()} disabled={activateAutomation.isPending}>
@@ -81,6 +81,7 @@ export function AutomationBuilderPage({ workspaceId, automationId }: { workspace
 
       <AutomationCanvas
         workspaceId={workspaceId}
+        automationId={automationId}
         initialFlow={automation.flowDefinition}
         readonly={!isEditable}
         onSave={isEditable ? handleSave : undefined}
@@ -97,28 +98,37 @@ export function AutomationBuilderPage({ workspaceId, automationId }: { workspace
         <div>
           <h2 className="mb-3 text-sm font-semibold text-ink">Recent runs</h2>
           <Card>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-line text-left text-ink-soft">
-                  <th className="px-4 py-3 font-medium">Subscriber</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Current node</th>
-                  <th className="px-4 py-3 font-medium">Started</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {runs.map((r) => (
-                  <tr key={r.id} className="hover:bg-canvas">
-                    <td className="px-4 py-3 text-ink">{r.subscriberEmail}</td>
-                    <td className="px-4 py-3">
-                      <Badge tone={runStatusTone[r.status] ?? "neutral"}>{r.status.toLowerCase()}</Badge>
-                    </td>
-                    <td className="px-4 py-3 text-ink-soft font-mono text-xs">{r.currentNodeId ?? "—"}</td>
-                    <td className="px-4 py-3 text-ink-soft">{new Date(r.startedAt).toLocaleDateString()}</td>
+            <div className="table-container">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-line text-left text-ink-soft">
+                    <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium">Subscriber</th>
+                    <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden sm:table-cell">Status</th>
+                    <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden md:table-cell">Current node</th>
+                    <th className="px-3 py-2 sm:px-4 sm:py-3 font-medium hidden lg:table-cell">Started</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {runs.map((r) => (
+                    <tr key={r.id} className="hover:bg-canvas">
+                      <td className="px-3 py-2 sm:px-4 sm:py-3 text-ink">
+                        <div>
+                          <span className="truncate">{r.subscriberEmail}</span>
+                          <div className="mt-1 sm:hidden">
+                            <Badge tone={runStatusTone[r.status] ?? "neutral"}>{r.status.toLowerCase()}</Badge>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 sm:px-4 sm:py-3 hidden sm:table-cell">
+                        <Badge tone={runStatusTone[r.status] ?? "neutral"}>{r.status.toLowerCase()}</Badge>
+                      </td>
+                      <td className="px-3 py-2 sm:px-4 sm:py-3 text-ink-soft font-mono text-xs hidden md:table-cell">{r.currentNodeId ?? "—"}</td>
+                      <td className="px-3 py-2 sm:px-4 sm:py-3 text-ink-soft hidden lg:table-cell">{new Date(r.startedAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         </div>
       )}

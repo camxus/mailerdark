@@ -49,7 +49,7 @@ export function SubscriberDetailPage({
         <ArrowLeft size={15} /> Back to subscribers
       </button>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-ink">{subscriber.email}</h1>
           <div className="mt-1.5 flex items-center gap-2">
@@ -59,24 +59,24 @@ export function SubscriberDetailPage({
             </span>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <select
             value={subscriber.status}
             onChange={(e) => updateSubscriber.mutate({ status: e.target.value as never })}
-            className="rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink"
+            className="w-full sm:w-auto rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink"
           >
             <option value="SUBSCRIBED">Subscribed</option>
             <option value="UNSUBSCRIBED">Unsubscribed</option>
             <option value="BOUNCED">Bounced</option>
             <option value="CLEANED">Cleaned</option>
           </select>
-          <Button variant="danger" onClick={handleDelete}>
+          <Button variant="danger" onClick={handleDelete} className="w-full sm:w-auto">
             <Trash2 size={15} /> Remove
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card className="p-4">
           <h2 className="mb-3 text-sm font-semibold text-ink">Custom fields</h2>
           {Object.keys(subscriber.customFields).length === 0 ? (
@@ -126,9 +126,9 @@ export function SubscriberDetailPage({
         ) : (
           <ul className="divide-y divide-line">
             {subscriber.activity.map((job) => (
-              <li key={job.id} className="flex items-center justify-between py-2.5 text-sm">
+              <li key={job.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 text-sm gap-2">
                 <span className="text-ink">{job.campaign?.subject ?? "Automation email"}</span>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {job.events.map((e, i) => (
                     <Badge key={i} tone="teal">
                       {e.type.toLowerCase()}

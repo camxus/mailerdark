@@ -17,7 +17,7 @@ import {
   Panel,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Plus } from "lucide-react";
+import { Plus, Filter, Clock, Mail, UserPlus, UserMinus, LogOut } from "lucide-react";
 import {
   TriggerNode, FilterNode, DelayNode, SendEmailNode,
   AddToGroupNode, RemoveFromGroupNode, ExitNode,
@@ -46,23 +46,25 @@ const defaultNodeData: Record<AutomationNodeType, AutomationNodeData> = {
   exit: { type: "exit", label: "Done" },
 };
 
-const addableNodeTypes: { type: AutomationNodeType; label: string; icon: string }[] = [
-  { type: "filter", label: "Filter", icon: "🔀" },
-  { type: "delay", label: "Wait", icon: "⏱" },
-  { type: "sendEmail", label: "Send email", icon: "✉️" },
-  { type: "addToGroup", label: "Add to group", icon: "➕" },
-  { type: "removeFromGroup", label: "Remove from group", icon: "➖" },
-  { type: "exit", label: "Exit", icon: "🏁" },
+const addableNodeTypes: { type: AutomationNodeType; label: string; icon: React.ReactNode }[] = [
+  { type: "filter", label: "Filter", icon: <Filter size={15} /> },
+  { type: "delay", label: "Wait", icon: <Clock size={15} /> },
+  { type: "sendEmail", label: "Send email", icon: <Mail size={15} /> },
+  { type: "addToGroup", label: "Add to group", icon: <UserPlus size={15} /> },
+  { type: "removeFromGroup", label: "Remove from group", icon: <UserMinus size={15} /> },
+  { type: "exit", label: "Exit", icon: <LogOut size={15} /> },
 ];
 
 export function AutomationCanvas({
   workspaceId,
+  automationId,
   initialFlow,
   readonly = false,
   onSave,
   isSaving,
 }: {
   workspaceId: string;
+  automationId: string;
   initialFlow: FlowDefinition;
   readonly?: boolean;
   onSave?: (flow: FlowDefinition) => void;
@@ -107,7 +109,7 @@ export function AutomationCanvas({
   }
 
   return (
-    <div className="relative flex h-[600px] w-full rounded-lg border border-line overflow-hidden bg-canvas">
+    <div className="relative flex h-[400px] sm:h-[600px] w-full rounded-lg border border-line overflow-hidden bg-canvas">
       <div className="flex-1 h-full">
         <ReactFlow
           nodes={nodes}
@@ -125,13 +127,13 @@ export function AutomationCanvas({
           <MiniMap nodeStrokeWidth={2} zoomable pannable />
 
           {!readonly && (
-            <Panel position="top-left" className="flex gap-2">
+            <Panel position="top-left" className="flex flex-col sm:flex-row gap-2 max-w-[calc(100%-2rem)]">
               <div className="relative">
-                <Button onClick={() => setShowAddMenu((v) => !v)} className="shadow-sm">
+                <Button onClick={() => setShowAddMenu((v) => !v)} className="shadow-sm w-full sm:w-auto">
                   <Plus size={15} /> Add node
                 </Button>
                 {showAddMenu && (
-                  <div className="absolute top-full left-0 mt-1 z-10 w-44 rounded-md border border-line bg-surface py-1 shadow-md">
+                  <div className="absolute top-full left-0 sm:left-full mt-1 z-10 w-44 rounded-md border border-line bg-surface py-1 shadow-md">
                     {addableNodeTypes.map((t) => (
                       <button
                         key={t.type}
@@ -146,7 +148,7 @@ export function AutomationCanvas({
                 )}
               </div>
               {onSave && (
-                <Button variant="secondary" onClick={handleSave} disabled={isSaving} className="shadow-sm">
+                <Button variant="secondary" onClick={handleSave} disabled={isSaving} className="shadow-sm w-full sm:w-auto">
                   {isSaving ? "Saving…" : "Save"}
                 </Button>
               )}
@@ -156,13 +158,16 @@ export function AutomationCanvas({
       </div>
 
       {selectedNode && (
-        <NodeConfigPanel
-          nodeId={selectedNode.id}
-          data={selectedNode.data as AutomationNodeData}
-          workspaceId={workspaceId}
-          onUpdate={handleNodeDataUpdate}
-          onClose={() => setSelectedNodeId(null)}
-        />
+        <div className="absolute inset-y-0 right-0 w-full sm:w-[320px] max-w-full border-l border-line bg-surface z-10 sm:z-auto">
+          <NodeConfigPanel
+            nodeId={selectedNode.id}
+            data={selectedNode.data as AutomationNodeData}
+            workspaceId={workspaceId}
+            automationId={automationId}
+            onUpdate={handleNodeDataUpdate}
+            onClose={() => setSelectedNodeId(null)}
+          />
+        </div>
       )}
     </div>
   );

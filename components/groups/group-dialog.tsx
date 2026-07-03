@@ -49,11 +49,11 @@ export function GroupDialog({
           />
         </div>
         <FieldError>{error?.message}</FieldError>
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="secondary" onClick={onClose}>
+        <div className="flex flex-col sm:flex-row justify-end gap-2 pt-1">
+          <Button type="button" variant="secondary" onClick={onClose} className="w-full sm:w-auto">
             Cancel
           </Button>
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" disabled={pending} className="w-full sm:w-auto">
             {pending ? "Saving…" : group ? "Save changes" : "Create group"}
           </Button>
         </div>
