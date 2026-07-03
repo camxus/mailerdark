@@ -41,11 +41,11 @@ export function ScheduleDialog({
           <p className="mt-1 text-xs text-ink-soft">In your browser&apos;s local time zone.</p>
         </div>
         <FieldError>{scheduleCampaign.error?.message}</FieldError>
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="secondary" onClick={onClose}>
+        <div className="flex flex-col sm:flex-row justify-end gap-2 pt-1">
+          <Button type="button" variant="secondary" onClick={onClose} className="w-full sm:w-auto">
             Cancel
           </Button>
-          <Button type="submit" disabled={scheduleCampaign.isPending}>
+          <Button type="submit" disabled={scheduleCampaign.isPending} className="w-full sm:w-auto">
             {scheduleCampaign.isPending ? "Scheduling…" : "Schedule"}
           </Button>
         </div>

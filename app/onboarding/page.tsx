@@ -55,8 +55,9 @@ export default function OnboardingPage() {
         </div>
         <div>
           <Label htmlFor="slug">Workspace URL</Label>
-          <div className="flex items-center gap-1.5 text-sm text-ink-soft">
-            <span>mailerdark.app/w/</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-1.5 text-sm text-ink-soft">
+            <span className="sm:hidden">mailerdark.app/w/</span>
+            <span className="hidden sm:inline">mailerdark.app/w/</span>
             <Input
               id="slug"
               value={slug}
@@ -65,6 +66,7 @@ export default function OnboardingPage() {
                 setSlug(slugify(e.target.value));
               }}
               required
+              className="w-full sm:flex-1"
             />
           </div>
         </div>

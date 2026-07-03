@@ -30,27 +30,27 @@ export function NodeShell({
   };
 
   return (
-    <div className={cx("min-w-[180px] rounded-lg border-2 bg-surface shadow-sm", accentClasses[accent])}>
+    <div className={cx("min-w-[150px] sm:min-w-[180px] rounded-lg border-2 bg-surface shadow-sm", accentClasses[accent])}>
       {hasInput && (
-        <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-current !border-2 !border-surface" />
+        <Handle type="target" position={Position.Top} className="!w-2.5 !h-2.5 !bg-current !border-2 !border-surface" />
       )}
-      <div className="flex items-center gap-2 px-3 py-2">
-        <span className="text-base">{icon}</span>
-        <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
+      <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-2">
+        <span className="text-sm sm:text-base">{icon}</span>
+        <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide">{label}</span>
       </div>
       {children && (
-        <div className="border-t border-current/20 px-3 py-2 text-xs">{children}</div>
+        <div className="border-t border-current/20 px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-xs">{children}</div>
       )}
       {hasOutput && !yesNo && (
-        <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-current !border-2 !border-surface" />
+        <Handle type="source" position={Position.Bottom} className="!w-2.5 !h-2.5 !bg-current !border-2 !border-surface" />
       )}
       {yesNo && (
         <>
           <Handle id="yes" type="source" position={Position.Bottom} style={{ left: "30%" }}
-            className="!w-3 !h-3 !bg-green !border-2 !border-surface" />
+            className="!w-2.5 !h-2.5 !bg-green !border-2 !border-surface" />
           <Handle id="no" type="source" position={Position.Bottom} style={{ left: "70%" }}
-            className="!w-3 !h-3 !bg-red !border-2 !border-surface" />
-          <div className="flex justify-between px-4 pb-1.5 text-[10px]">
+            className="!w-2.5 !h-2.5 !bg-red !border-2 !border-surface" />
+          <div className="flex justify-between px-2 pb-1 sm:px-4 text-[9px] sm:text-[10px]">
             <span className="text-green font-semibold">Yes</span>
             <span className="text-red font-semibold">No</span>
           </div>

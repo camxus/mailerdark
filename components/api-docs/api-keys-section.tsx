@@ -24,12 +24,12 @@ export function ApiKeysSection({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-sm font-semibold text-ink">API keys</h2>
           <p className="text-sm text-ink-soft">Used to authenticate requests to the API below.</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
+        <Button onClick={() => setShowCreate(true)} className="w-full sm:w-auto">
           <Plus size={16} /> New key
         </Button>
       </div>
@@ -38,14 +38,14 @@ export function ApiKeysSection({
         {isLoading ? (
           <p className="p-6 text-sm text-ink-soft">Loading…</p>
         ) : !keys || keys.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-center">
+          <div className="flex flex-col items-center gap-2 py-8 px-4 text-center sm:py-10">
             <KeyRound size={20} className="text-ink-soft" />
             <p className="text-sm text-ink-soft">No API keys yet — create one to start calling the API.</p>
           </div>
         ) : (
           <ul className="divide-y divide-line">
             {keys.map((k) => (
-              <li key={k.id} className="flex items-center justify-between px-4 py-3">
+              <li key={k.id} className="flex flex-col sm:flex-row sm:items-start justify-between px-3 py-3 sm:px-4 sm:py-3 gap-2">
                 <div>
                   <p className="text-sm font-medium text-ink">{k.name}</p>
                   <div className="mt-1 flex flex-wrap gap-1">
@@ -63,7 +63,7 @@ export function ApiKeysSection({
                       revokeKey.mutate(k.id);
                     }
                   }}
-                  className="rounded-md p-1.5 text-ink-soft hover:bg-red-soft hover:text-red"
+                  className="rounded-md p-1.5 text-ink-soft hover:bg-red-soft hover:text-red self-start sm:self-auto"
                 >
                   <Trash2 size={15} />
                 </button>
@@ -137,9 +137,9 @@ function CreateKeyDialog({
           </div>
         </div>
         <FieldError>{createKey.error?.message}</FieldError>
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={createKey.isPending || scopes.length === 0}>
+        <div className="flex flex-col sm:flex-row justify-end gap-2 pt-1">
+          <Button type="button" variant="secondary" onClick={onClose} className="w-full sm:w-auto">Cancel</Button>
+          <Button type="submit" disabled={createKey.isPending || scopes.length === 0} className="w-full sm:w-auto">
             {createKey.isPending ? "Creating…" : "Create key"}
           </Button>
         </div>

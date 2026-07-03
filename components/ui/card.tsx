@@ -16,9 +16,9 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-line py-16 text-center">
-      <p className="font-medium text-ink">{title}</p>
-      <p className="max-w-sm text-sm text-ink-soft">{description}</p>
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-line py-8 px-4 text-center sm:py-16">
+      <p className="font-medium text-ink text-sm sm:text-base">{title}</p>
+      <p className="max-w-sm text-xs sm:text-sm text-ink-soft">{description}</p>
       {action && <div className="mt-3">{action}</div>}
     </div>
   );

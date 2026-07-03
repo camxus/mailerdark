@@ -136,8 +136,8 @@ export function TryItPanel({
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <Button onClick={handleRun} disabled={running || !apiKey}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+        <Button onClick={handleRun} disabled={running || !apiKey} className="w-full sm:w-auto">
           <Play size={14} /> {running ? "Running…" : "Run request"}
         </Button>
         {!apiKey && <p className="text-xs text-ink-soft">Paste an API key above to try this live.</p>}

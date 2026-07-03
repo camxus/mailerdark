@@ -58,15 +58,15 @@ export function AiSettingsPage({ workspaceId }: { workspaceId: string }) {
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Mode toggle */}
-        <Card className="p-5 space-y-4">
+        <Card className="p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-ink">Provider</h2>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             {(["openrouter", "custom"] as const).map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => setMode(m)}
-                className={`flex-1 rounded-lg border-2 px-4 py-3 text-left transition-colors ${
+                className={`flex-1 rounded-lg border-2 px-3 py-2.5 sm:px-4 sm:py-3 text-left transition-colors ${
                   mode === m
                     ? "border-teal bg-teal-soft"
                     : "border-line bg-surface hover:bg-canvas"
@@ -200,8 +200,8 @@ export function AiSettingsPage({ workspaceId }: { workspaceId: string }) {
 
         <FieldError>{null}</FieldError>
 
-        <div className="flex items-center gap-3">
-          <Button type="submit" disabled={updateSettings.isPending}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <Button type="submit" disabled={updateSettings.isPending} className="w-full sm:w-auto">
             {updateSettings.isPending ? "Saving…" : "Save settings"}
           </Button>
           {saved && (

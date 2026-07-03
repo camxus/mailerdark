@@ -69,16 +69,19 @@ export function SplitEditorPane({
   }
 
   return (
-    <div className={cx("flex flex-col h-[500px] sm:h-[620px] overflow-hidden rounded-lg border border-line", className)}>
-      {/* ── Snippets sidebar ── */}
+    <div className="flex flex-col h-[500px] sm:h-[620px] overflow-hidden rounded-lg border border-line">
+      {/* ── Snippets sidebar (overlays on mobile, side on desktop) ── */}
       {showSnippets && !disabled && (
-        <div className={cx("absolute inset-y-0 left-0 z-10 w-full sm:w-64 flex-col border-r border-line bg-surface transition-transform", showSnippetsMobile ? "flex" : "hidden sm:flex")}>
+        <div className={cx(
+          "absolute inset-y-0 left-0 z-20 w-full sm:w-64 flex-col border-r border-line bg-surface transition-transform",
+          showSnippetsMobile ? "flex" : "hidden sm:flex"
+        )}>
           <SnippetsSidebar workspaceId={workspaceId} onInsert={handleSnippetInsert} />
         </div>
       )}
 
       {/* ── Preview pane ── */}
-      <div className={cx("flex flex-1 flex-col min-w-0", !showEditor && "border-r-0")}>
+      <div className={cx("flex flex-1 flex-col min-w-0", !showEditor && "border-b-0")}>
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 border-b border-line bg-canvas px-2 py-2 sm:px-3 sm:py-1.5">
           <div className="flex items-center gap-2">
             {!disabled && (

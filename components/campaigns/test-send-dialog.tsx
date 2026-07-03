@@ -56,11 +56,11 @@ export function TestSendDialog({
           </ul>
         )}
 
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="secondary" onClick={onClose}>
+        <div className="flex flex-col sm:flex-row justify-end gap-2 pt-1">
+          <Button type="button" variant="secondary" onClick={onClose} className="w-full sm:w-auto">
             Close
           </Button>
-          <Button type="submit" disabled={testSend.isPending}>
+          <Button type="submit" disabled={testSend.isPending} className="w-full sm:w-auto">
             {testSend.isPending ? "Sending…" : "Send test"}
           </Button>
         </div>
