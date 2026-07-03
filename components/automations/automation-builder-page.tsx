@@ -64,8 +64,8 @@ async function handleSave(flow: FlowDefinition) {
         </div>
         <div className="flex flex-wrap gap-2">
           {automation.status === "ACTIVE" ? (
-            <Button variant="secondary" onClick={() => pauseCampaign.mutate()} disabled={pauseCampaign.isPending}>
-              <Pause size={15} /> {pauseCampaign.isPending ? "Pausing…" : "Pause"}
+            <Button variant="secondary" onClick={() => pauseAutomation.mutate()} disabled={pauseAutomation.isPending}>
+              <Pause size={15} /> {pauseAutomation.isPending ? "Pausing…" : "Pause"}
             </Button>
           ) : (
             <Button onClick={() => activateAutomation.mutate()} disabled={activateAutomation.isPending}>
