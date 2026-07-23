@@ -85,12 +85,28 @@ function CampaignEditorForm({
   const [showTestSend, setShowTestSend] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
 
-  // Live preview HTML — updated from the server (with merge-field substitution)
-  // when the editor is idle for 1.5s, or falls back to raw content while waiting.
+  // Live preview HTML — updated from the server when the editor is idle for 1.5s
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounce preview refresh so we aren't calling the server on every keystroke
+  // Auto-save draft when content changes
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      await updateCampaign.mutateAsync({
+        subject, fromName, fromEmail,
+        replyTo: replyTo || undefined,
+        htmlContent, audience,
+      });
+    }, 1500);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [subject, fromName, fromEmail, replyTo, htmlContent, audience, updateCampaign]);
+
+  // Debounce preview refresh
   useEffect(() => {
     if (previewTimer.current) clearTimeout(previewTimer.current);
     previewTimer.current = setTimeout(async () => {
@@ -131,12 +147,20 @@ function CampaignEditorForm({
   return (
     <div className="space-y-5">
       {/* ── Back + title ── */}
-      <button
-        onClick={() => router.push(`/w/${workspaceId}/campaigns`)}
-        className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink"
-      >
-        <ArrowLeft size={15} /> Back to campaigns
-      </button>
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => router.push(`/w/${workspaceId}/campaigns`)}
+          className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink"
+        >
+          <ArrowLeft size={15} /> Back to campaigns
+        </button>
+        <Button
+          variant="secondary"
+          onClick={() => router.push(`/w/${workspaceId}/campaigns/${campaignId}/compose`)}
+        >
+          Edit content
+        </Button>
+      </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">

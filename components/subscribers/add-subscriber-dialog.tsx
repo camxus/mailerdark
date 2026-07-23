@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input, Label, FieldError } from "@/components/ui/input";
 import { useCreateSubscriber } from "@/lib/queries/subscribers";
 import { useGroups } from "@/lib/queries/groups";
+import { useFields } from "@/lib/queries/fields";
 
 export function AddSubscriberDialog({
   workspaceId,
@@ -16,12 +17,31 @@ export function AddSubscriberDialog({
 }) {
   const [email, setEmail] = useState("");
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const { data: groups } = useGroups(workspaceId);
+  const { data: fields } = useFields(workspaceId);
   const createSubscriber = useCreateSubscriber(workspaceId);
+
+  useEffect(() => {
+    if (fields?.length) {
+      const initial: Record<string, unknown> = {};
+      fields.forEach((f) => {
+        initial[f.key] = f.type === "BOOLEAN" ? false : "";
+      });
+      setCustomFields(initial);
+    }
+  }, [fields]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await createSubscriber.mutateAsync({ email, groupIds: selectedGroups });
+    const cleanedFields: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(customFields)) {
+      if (value === "" || value === null || value === undefined || (typeof value === "boolean" && value === false)) {
+        continue;
+      }
+      cleanedFields[key] = value;
+    }
+    await createSubscriber.mutateAsync({ email, groupIds: selectedGroups, customFields: cleanedFields });
     onClose();
   }
 
@@ -39,6 +59,57 @@ export function AddSubscriberDialog({
             placeholder="jane@example.com"
           />
         </div>
+
+        {fields && fields.length > 0 && (
+          <div className="space-y-3">
+            {fields.map((field) => (
+              <div key={field.id}>
+                <Label htmlFor={field.key}>{field.label}</Label>
+                {field.type === "BOOLEAN" ? (
+                  <input
+                    id={field.key}
+                    type="checkbox"
+                    checked={Boolean(customFields[field.key])}
+                    onChange={(e) =>
+                      setCustomFields((prev) => ({ ...prev, [field.key]: e.target.checked }))
+                    }
+                    className="h-4 w-4 rounded border border-line bg-surface accent-teal"
+                  />
+                ) : field.type === "DATE" ? (
+                  <Input
+                    id={field.key}
+                    type="date"
+                    value={typeof customFields[field.key] === "string" ? (customFields[field.key] as string) : ""}
+                    onChange={(e) =>
+                      setCustomFields((prev) => ({ ...prev, [field.key]: e.target.value }))
+                    }
+                  />
+                ) : field.type === "NUMBER" ? (
+                  <Input
+                    id={field.key}
+                    type="number"
+                    value={typeof customFields[field.key] === "number" || typeof customFields[field.key] === "string" ? (customFields[field.key] as string | number) : ""}
+                    onChange={(e) =>
+                      setCustomFields((prev) => ({
+                        ...prev,
+                        [field.key]: e.target.value === "" ? null : Number(e.target.value),
+                      }))
+                    }
+                  />
+                ) : (
+                  <Input
+                    id={field.key}
+                    type="text"
+                    value={typeof customFields[field.key] === "string" ? (customFields[field.key] as string) : ""}
+                    onChange={(e) =>
+                      setCustomFields((prev) => ({ ...prev, [field.key]: e.target.value }))
+                    }
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {groups && groups.length > 0 && (
           <div>
