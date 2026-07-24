@@ -3,9 +3,7 @@ import { requireWorkspaceAccess } from "@/lib/auth/require-workspace-access";
 import { dispatchCampaign } from "@/lib/campaigns/dispatch";
 
 // Sends all recipients inline with bounded concurrency (see
-// lib/campaigns/dispatch.ts) — give it real headroom on platforms with a
-// hard request timeout. Lower SEND_CONCURRENCY if your hosting
-// plan caps function duration below 60s.
+// lib/campaigns/dispatch.ts).
 export const maxDuration = 60;
 
 type RouteParams = { params: Promise<{ workspaceId: string; id: string }> };

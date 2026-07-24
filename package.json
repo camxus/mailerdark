@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "worker:campaign-sender": "tsx workers/campaign-sender.ts",
     "worker:automation-engine": "tsx workers/automation-engine.ts",
     "worker:dns-verifier": "tsx workers/dns-verifier.ts"
   },
