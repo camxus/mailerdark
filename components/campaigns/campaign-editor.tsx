@@ -95,11 +95,15 @@ function CampaignEditorForm({
   useEffect(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
-      await updateCampaign.mutateAsync({
-        subject, fromName, fromEmail,
-        replyTo: replyTo || undefined,
-        htmlContent, audience,
-      });
+      const payload: Record<string, unknown> = {
+        subject,
+        htmlContent,
+        audience,
+      };
+      if (fromName) payload.fromName = fromName;
+      if (fromEmail) payload.fromEmail = fromEmail;
+      if (replyTo) payload.replyTo = replyTo;
+      await updateCampaign.mutateAsync(payload);
     }, 1500);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -121,11 +125,15 @@ function CampaignEditorForm({
   }, [htmlContent]);
 
   async function handleSave() {
-    await updateCampaign.mutateAsync({
-      subject, fromName, fromEmail,
-      replyTo: replyTo || undefined,
-      htmlContent, audience,
-    });
+    const payload: Record<string, unknown> = {
+      subject,
+      htmlContent,
+      audience,
+    };
+    if (fromName) payload.fromName = fromName;
+    if (fromEmail) payload.fromEmail = fromEmail;
+    if (replyTo) payload.replyTo = replyTo;
+    await updateCampaign.mutateAsync(payload);
   }
 
   async function handleDelete() {
