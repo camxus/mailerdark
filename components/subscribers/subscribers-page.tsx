@@ -105,10 +105,10 @@ export function SubscribersPage({ workspaceId }: { workspaceId: string }) {
         <Card className="p-3 flex items-center justify-between">
           <span className="text-sm text-ink">{selectedCount} selected</span>
           <div className="flex gap-2">
-            <Button variant="danger" size="sm" onClick={handleBatchDelete} disabled={batchDelete.isPending}>
+            <Button variant="danger" onClick={handleBatchDelete} disabled={batchDelete.isPending}>
               <Trash2 size={15} /> Delete
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => setSelectedIds(new Set())}>
+            <Button variant="secondary" onClick={() => setSelectedIds(new Set())}>
               <X size={15} /> Clear
             </Button>
           </div>
