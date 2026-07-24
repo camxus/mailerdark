@@ -6,7 +6,8 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input, Label, FieldError } from "@/components/ui/input";
 import { useImportSubscribers } from "@/lib/queries/subscribers";
-import { useGroups, useFields, useCreateField } from "@/lib/queries/fields";
+import { useGroups } from "@/lib/queries/groups";
+import { useFields, useCreateField } from "@/lib/queries/fields";
 import { parseCsv } from "@/lib/csv-parse";
 
 type FieldMapping = Record<string, { type: "existing" | "new"; fieldKey?: string }>;
