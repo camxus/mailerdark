@@ -18,9 +18,13 @@ export const POST = withErrorHandling(async (req: Request, { params }: RoutePara
     return fail(409, "NOT_REGISTERED", "This domain was never registered with the email provider.");
   }
 
+  const [settings] = await Promise.all([
+    db.workspaceSettings.findUnique({ where: { workspaceId } }),
+  ]);
+
   let result;
   try {
-    result = await checkDomainStatus(domain.resendDomainId, domain.domain);
+    result = await checkDomainStatus(domain.resendDomainId, domain.domain, settings?.resendApiKey || undefined);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to verify domain.";
     return fail(502, "PROVIDER_ERROR", message);

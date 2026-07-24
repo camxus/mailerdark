@@ -28,14 +28,17 @@ export const POST = withErrorHandling(async (req: Request, { params }: RoutePara
 
   const body = createDomainSchema.parse(await req.json());
 
-  const existing = await db.sendingDomain.findUnique({
-    where: { workspaceId_domain: { workspaceId, domain: body.domain } },
-  });
+  const [existing, settings] = await Promise.all([
+    db.sendingDomain.findUnique({
+      where: { workspaceId_domain: { workspaceId, domain: body.domain } },
+    }),
+    db.workspaceSettings.findUnique({ where: { workspaceId } }),
+  ]);
   if (existing) return fail(409, "DOMAIN_EXISTS", "This domain is already added.");
 
   let registration;
   try {
-    registration = await registerDomain(body.domain);
+    registration = await registerDomain(body.domain, settings?.resendApiKey || undefined);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to register domain.";
     return fail(502, "PROVIDER_ERROR", message);

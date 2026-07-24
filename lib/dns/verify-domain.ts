@@ -30,8 +30,8 @@ function mapRecordStatus(status: string | undefined): DnsCheckStatus {
  * don't invent record values ourselves, we surface exactly what Resend
  * requires for that specific domain.
  */
-export async function registerDomain(domain: string): Promise<DomainRegistration> {
-  const resend = createResendClient();
+export async function registerDomain(domain: string, apiKey?: string): Promise<DomainRegistration> {
+  const resend = createResendClient(apiKey);
   const { data, error } = await resend.domains.create({ name: domain });
 
   if (error || !data) {
@@ -57,8 +57,8 @@ export async function registerDomain(domain: string): Promise<DomainRegistration
  * it's a policy record the domain owner manages on their own, not
  * something tied to Resend's sending setup.
  */
-export async function checkDomainStatus(resendDomainId: string, domain: string): Promise<DomainCheckResult> {
-  const resend = createResendClient();
+export async function checkDomainStatus(resendDomainId: string, domain: string, apiKey?: string): Promise<DomainCheckResult> {
+  const resend = createResendClient(apiKey);
 
   // Ask Resend to re-run its own check, then fetch the resulting status —
   // verify() alone doesn't return per-record detail, get() does.
@@ -96,7 +96,7 @@ async function checkDmarcRecord(domain: string): Promise<DnsCheckStatus> {
   }
 }
 
-export async function removeDomain(resendDomainId: string): Promise<void> {
-  const resend = createResendClient();
+export async function removeDomain(resendDomainId: string, apiKey?: string): Promise<void> {
+  const resend = createResendClient(apiKey);
   await resend.domains.remove(resendDomainId);
 }

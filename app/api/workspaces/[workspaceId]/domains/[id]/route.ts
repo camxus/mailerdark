@@ -13,10 +13,12 @@ export const DELETE = withErrorHandling(async (req: Request, { params }: RoutePa
   const domain = await db.sendingDomain.findFirst({ where: { id, workspaceId } });
   if (!domain) return fail(404, "NOT_FOUND", "Domain not found.");
 
+  const [settings] = await Promise.all([
+    db.workspaceSettings.findUnique({ where: { workspaceId } }),
+  ]);
+
   if (domain.resendDomainId) {
-    await removeDomain(domain.resendDomainId).catch((error) => {
-      // Don't block local cleanup on a provider-side failure (e.g. it was
-      // already removed directly in the Resend dashboard).
+    await removeDomain(domain.resendDomainId, settings?.resendApiKey || undefined).catch((error) => {
       console.error("Failed to remove domain from Resend:", error);
     });
   }
