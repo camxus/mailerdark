@@ -12,8 +12,8 @@ export const POST = withErrorHandling(async (req: Request, { params }: RoutePara
 
   const campaign = await db.campaign.findFirst({ where: { id, workspaceId } });
   if (!campaign) return fail(404, "NOT_FOUND", "Campaign not found.");
-  if (campaign.status !== "DRAFT") {
-    return fail(409, "INVALID_STATUS", "Only draft campaigns can be scheduled.");
+  if (campaign.status !== "DRAFT" && campaign.status !== "PAUSED") {
+    return fail(409, "INVALID_STATUS", "Only draft or paused campaigns can be scheduled.");
   }
 
   const body = scheduleCampaignSchema.parse(await req.json());

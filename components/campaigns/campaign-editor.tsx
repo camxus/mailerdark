@@ -69,7 +69,7 @@ function CampaignEditorForm({
   const pauseCampaign = usePauseCampaign(workspaceId, campaignId);
   const resendCampaign = useResendCampaign(workspaceId, campaignId);
 
-  const isLive = campaign.status !== "DRAFT";
+  const isLive = campaign.status === "SENDING" || campaign.status === "SENT" || campaign.status === "FAILED";
 
   const { data: stats } = useCampaignStats(workspaceId, campaignId, {
     pollMs: campaign.status === "SENDING" ? 4000 : undefined,
