@@ -6,10 +6,10 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input, Label, FieldError } from "@/components/ui/input";
 import { useImportSubscribers } from "@/lib/queries/subscribers";
-import { useGroups, useFields } from "@/lib/queries/groups";
+import { useGroups, useFields, useCreateField } from "@/lib/queries/fields";
 import { parseCsv } from "@/lib/csv-parse";
 
-type FieldMapping = Record<string, string | null>;
+type FieldMapping = Record<string, { type: "existing" | "new"; fieldKey?: string }>;
 
 export function ImportSubscribersDialog({
   workspaceId,
@@ -23,15 +23,24 @@ export function ImportSubscribersDialog({
   const [headers, setHeaders] = useState<string[]>([]);
   const [previewRows, setPreviewRows] = useState<string[][]>([]);
   const [emailColumn, setEmailColumn] = useState<string | null>(null);
+  const [selectedColumns, setSelectedColumns] = useState<Record<string, boolean>>({});
   const [fieldMapping, setFieldMapping] = useState<FieldMapping>({});
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   const { data: groups } = useGroups(workspaceId);
   const { data: fields } = useFields(workspaceId);
+  const createField = useCreateField(workspaceId);
   const importSubscribers = useImportSubscribers(workspaceId);
 
-  const customFieldKeys = useMemo(() => fields?.map((f) => ({ key: f.key, label: f.label })) ?? [], [fields]);
+  const existingFieldMap = useMemo(() => {
+    const map: Record<string, { key: string; label: string }> = {};
+    fields?.forEach((f) => {
+      map[f.key] = { key: f.key, label: f.label };
+    });
+    return map;
+  }, [fields]);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0];
@@ -46,19 +55,39 @@ export function ImportSubscribersDialog({
       setHeaders(h);
       setPreviewRows(rows.slice(0, 5));
       setEmailColumn(null);
+      setSelectedColumns({});
       setFieldMapping({});
       setError(null);
     };
     reader.readAsText(selected);
   }
 
-  function handleFieldMappingChange(fieldKey: string, csvColumn: string | null) {
+  function toggleColumn(column: string) {
+    setSelectedColumns((prev) => {
+      const next = { ...prev };
+      if (next[column]) {
+        delete next[column];
+        setFieldMapping((mapping) => {
+          const nextMapping = { ...mapping };
+          delete nextMapping[column];
+          return nextMapping;
+        });
+      } else {
+        next[column] = true;
+      }
+      return next;
+    });
+  }
+
+  function handleFieldMappingChange(column: string, mapping: { type: "existing" | "new"; fieldKey?: string }) {
     setFieldMapping((prev) => {
       const next = { ...prev };
-      if (csvColumn === null) {
-        delete next[fieldKey];
+      if (mapping.type === "existing" && mapping.fieldKey) {
+        next[column] = { type: "existing", fieldKey: mapping.fieldKey };
+      } else if (mapping.type === "new") {
+        next[column] = { type: "new", fieldKey: column.toLowerCase().replace(/[^a-z0-9_]/g, "_") };
       } else {
-        next[fieldKey] = csvColumn;
+        delete next[column];
       }
       return next;
     });
@@ -70,45 +99,79 @@ export function ImportSubscribersDialog({
       return;
     }
 
-    const { rows } = parseCsv(csvText);
-    const emailIndex = headers.indexOf(emailColumn);
-    if (emailIndex === -1) {
-      setError("Email column not found.");
+    const activeColumns = Object.keys(selectedColumns).filter((col) => selectedColumns[col]);
+    if (activeColumns.length === 0) {
+      setError("Please select at least one custom field column.");
       return;
     }
 
-    const subscribers = rows
-      .map((row) => {
-        const email = row[emailIndex]?.trim();
-        if (!email) return null;
+    setPending(true);
+    setError(null);
 
-        const customFields: Record<string, unknown> = {};
-        for (const [fieldKey, csvColumn] of Object.entries(fieldMapping)) {
-          if (!csvColumn) continue;
-          const colIndex = headers.indexOf(csvColumn);
-          if (colIndex === -1) continue;
-          const rawValue = row[colIndex]?.trim() ?? "";
-          if (rawValue === "") continue;
-          customFields[fieldKey] = rawValue;
+    try {
+      const { rows } = parseCsv(csvText);
+      const emailIndex = headers.indexOf(emailColumn);
+      if (emailIndex === -1) {
+        throw new Error("Email column not found.");
+      }
+
+      for (const column of activeColumns) {
+        const mapping = fieldMapping[column];
+        if (!mapping || mapping.type === "new") {
+          const fieldKey = mapping?.fieldKey || column.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+          const existingField = Object.values(existingFieldMap).find((f) => f.key === fieldKey);
+          if (!existingField) {
+            await createField.mutateAsync({
+              key: fieldKey,
+              label: column.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+              type: "TEXT",
+            });
+          }
         }
+      }
 
-        return { email, customFields: Object.keys(customFields).length > 0 ? customFields : undefined };
-      })
-      .filter((s): s is { email: string; customFields?: Record<string, unknown> } => s !== null);
+      const subscribers = rows
+        .map((row) => {
+          const email = row[emailIndex]?.trim();
+          if (!email) return null;
 
-    if (subscribers.length === 0) {
-      setError("No valid subscribers found in the CSV.");
-      return;
+          const customFields: Record<string, unknown> = {};
+          for (const column of activeColumns) {
+            const colIndex = headers.indexOf(column);
+            if (colIndex === -1) continue;
+            const rawValue = row[colIndex]?.trim() ?? "";
+            if (rawValue === "") continue;
+
+            const mapping = fieldMapping[column];
+            const fieldKey = mapping?.fieldKey || column.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+            customFields[fieldKey] = rawValue;
+          }
+
+          return {
+            email,
+            customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
+          };
+        })
+        .filter((s): s is { email: string; customFields?: Record<string, unknown> } => s !== null);
+
+      if (subscribers.length === 0) {
+        throw new Error("No valid subscribers found in the CSV.");
+      }
+
+      await importSubscribers.mutateAsync({
+        subscribers,
+        groupIds: selectedGroups.length > 0 ? selectedGroups : undefined,
+      });
+
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Import failed.");
+    } finally {
+      setPending(false);
     }
-
-    await importSubscribers.mutateAsync({
-      subscribers,
-      groupIds: selectedGroups.length > 0 ? selectedGroups : undefined,
-    });
-    onClose();
   }
 
-  const canImport = headers.length > 0 && emailColumn !== null;
+  const canImport = headers.length > 0 && emailColumn !== null && Object.values(selectedColumns).some((v) => v);
 
   return (
     <Modal title="Import subscribers" onClose={onClose}>
@@ -146,33 +209,62 @@ export function ImportSubscribersDialog({
               </select>
             </div>
 
-            {customFieldKeys.length > 0 && (
-              <div>
-                <Label>Map custom fields</Label>
-                <p className="mt-1 mb-2 text-xs text-ink-soft">
-                  Match CSV columns to your custom fields.
-                </p>
-                <div className="space-y-2">
-                  {customFieldKeys.map((field) => (
-                    <div key={field.key} className="flex items-center gap-2">
-                      <span className="w-1/3 text-sm text-ink">{field.label}</span>
-                      <select
-                        value={fieldMapping[field.key] ?? ""}
-                        onChange={(e) => handleFieldMappingChange(field.key, e.target.value || null)}
-                        className="flex-1 rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-ink"
-                      >
-                        <option value="">—</option>
-                        {headers.map((h) => (
-                          <option key={h} value={h}>
-                            {h}
-                          </option>
-                        ))}
-                      </select>
+            <div>
+              <Label>Custom fields to import</Label>
+              <p className="mt-1 mb-2 text-xs text-ink-soft">
+                Select columns to import as custom fields. Map them to existing fields or create new ones.
+              </p>
+              <div className="space-y-2 max-h-60 overflow-y-auto rounded-md border border-line p-2">
+                {headers.map((header) => {
+                  if (header === emailColumn) return null;
+                  const isSelected = selectedColumns[header] || false;
+                  const mapping = fieldMapping[header];
+
+                  return (
+                    <div key={header} className="space-y-1">
+                      <label className="flex items-center gap-2 text-sm text-ink">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleColumn(header)}
+                          className="h-4 w-4 rounded border border-line bg-surface accent-teal"
+                        />
+                        {header}
+                      </label>
+                      {isSelected && (
+                        <div className="ml-6">
+                          <select
+                            value={mapping ? (mapping.type === "existing" ? `existing:${mapping.fieldKey}` : "new") : "new"}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value.startsWith("existing:")) {
+                                handleFieldMappingChange(header, { type: "existing", fieldKey: value.replace("existing:", "") });
+                              } else {
+                                handleFieldMappingChange(header, { type: "new" });
+                              }
+                            }}
+                            className="w-full rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-ink"
+                          >
+                            <option value="new">Create new field: {header}</option>
+                            {Object.values(existingFieldMap).length > 0 && (
+                              <>
+                                <optgroup label="Existing fields">
+                                  {Object.values(existingFieldMap).map((f) => (
+                                    <option key={f.key} value={`existing:${f.key}`}>
+                                      {f.label}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              </>
+                            )}
+                          </select>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
 
             {groups && groups.length > 0 && (
               <div>
@@ -242,11 +334,11 @@ export function ImportSubscribersDialog({
             <FieldError>{error || importSubscribers.error?.message}</FieldError>
 
             <div className="flex justify-end gap-2 pt-1">
-              <Button type="button" variant="secondary" onClick={onClose}>
+              <Button type="button" variant="secondary" onClick={onClose} disabled={pending}>
                 Cancel
               </Button>
-              <Button type="button" onClick={handleImport} disabled={!canImport || importSubscribers.isPending}>
-                {importSubscribers.isPending ? "Importing…" : "Import subscribers"}
+              <Button type="button" onClick={handleImport} disabled={!canImport || pending || importSubscribers.isPending}>
+                {pending || importSubscribers.isPending ? "Importing…" : "Import subscribers"}
               </Button>
             </div>
           </>
