@@ -11,7 +11,7 @@ const BATCH_SIZE = 50;
 export async function dispatchCampaign(workspaceId: string, campaignId: string) {
   const campaign = await db.campaign.findFirst({ where: { id: campaignId, workspaceId } });
   if (!campaign) throw new NotFoundError("Campaign not found.");
-  if (!["DRAFT", "SCHEDULED", "PAUSED"].includes(campaign.status)) {
+  if (!["DRAFT", "SCHEDULED", "PAUSED", "SENDING"].includes(campaign.status)) {
     throw new Error("This campaign has already been sent or is currently sending.");
   }
 

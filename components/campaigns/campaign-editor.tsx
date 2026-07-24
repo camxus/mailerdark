@@ -69,7 +69,7 @@ function CampaignEditorForm({
   const pauseCampaign = usePauseCampaign(workspaceId, campaignId);
   const resendCampaign = useResendCampaign(workspaceId, campaignId);
 
-  const isLive = campaign.status === "SENDING" || campaign.status === "SENT" || campaign.status === "FAILED";
+  const isLive = campaign.status === "SENT" || campaign.status === "FAILED";
 
   const { data: stats } = useCampaignStats(workspaceId, campaignId, {
     pollMs: campaign.status === "SENDING" ? 4000 : undefined,
@@ -208,12 +208,12 @@ function CampaignEditorForm({
           {!isLive && (
             <Button
               onClick={async () => {
-                if (!confirm("Send this campaign now?")) return;
+                if (!confirm(campaign.status === "SENDING" ? "Resume sending this campaign?" : "Send this campaign now?")) return;
                 await sendNow.mutateAsync();
               }}
               disabled={sendNow.isPending}
             >
-              <Send size={15} /> {sendNow.isPending ? "Sending…" : "Send now"}
+              <Send size={15} /> {sendNow.isPending ? "Sending…" : campaign.status === "SENDING" ? "Resume" : "Send now"}
             </Button>
           )}
           {(campaign.status === "SENDING" || campaign.status === "SCHEDULED") && (
@@ -261,7 +261,7 @@ function CampaignEditorForm({
       {anyError && <FieldError>{anyError}</FieldError>}
 
       {/* ── Stats (while sending) ── */}
-      {stats && isLive && (
+      {(campaign.status === "SENDING" || campaign.status === "SCHEDULED") && stats && (
         <Card className="grid grid-cols-2 sm:grid-cols-5 divide-y sm:divide-x divide-line p-0">
           <Stat label="Sent" value={stats.sent} />
           <Stat label="Opens" value={`${stats.uniqueOpens} (${Math.round(stats.openRate * 100)}%)`} />
