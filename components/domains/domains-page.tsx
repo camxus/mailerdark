@@ -134,24 +134,37 @@ function DomainRow({
 }
 
 function DnsRecordRow({ record }: { record: DnsRecord }) {
-  const [copied, setCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
+  const [copiedValue, setCopiedValue] = useState(false);
 
-  async function handleCopy() {
+  async function copyKey() {
+    await navigator.clipboard.writeText(record.name);
+    setCopiedKey(true);
+    setTimeout(() => setCopiedKey(false), 1500);
+  }
+
+  async function copyValue() {
     await navigator.clipboard.writeText(record.value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    setCopiedValue(true);
+    setTimeout(() => setCopiedValue(false), 1500);
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-[60px_1fr_auto] items-start sm:items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-1.5 text-xs">
-      <span className="font-mono font-semibold text-ink-soft">{record.type}</span>
-      <div className="min-w-0">
-        <p className="truncate font-mono text-ink">{record.name}</p>
-        <p className="truncate font-mono text-ink-soft break-all">{record.value}</p>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-2 text-xs">
+      <span className="font-mono font-semibold text-ink-soft w-12 shrink-0">{record.type}</span>
+      <div className="flex-1 min-w-0 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <code className="font-mono text-ink break-all">{record.name}</code>
+        <span className="text-ink-soft">:</span>
+        <code className="font-mono text-ink-soft break-all flex-1">{record.value}</code>
       </div>
-      <button onClick={handleCopy} className="rounded p-1 text-ink-soft hover:bg-canvas self-start sm:self-auto" title="Copy value">
-        {copied ? <Check size={13} className="text-green" /> : <Copy size={13} />}
-      </button>
+      <div className="flex items-center gap-1 shrink-0">
+        <button onClick={copyKey} className="rounded p-1 text-ink-soft hover:bg-canvas" title="Copy key">
+          {copiedKey ? <Check size={13} className="text-green" /> : <Copy size={13} />}
+        </button>
+        <button onClick={copyValue} className="rounded p-1 text-ink-soft hover:bg-canvas" title="Copy value">
+          {copiedValue ? <Check size={13} className="text-green" /> : <Copy size={13} />}
+        </button>
+      </div>
     </div>
   );
 }
