@@ -254,7 +254,7 @@ export const apiGroups: ApiGroup[] = [
         description: "Resolves the audience and sends immediately.",
         scope: "campaigns:write",
         pathParams: [{ name: "id", type: "string", required: true, description: "Campaign id." }],
-        responseExample: { totalRecipients: 1204, sentCount: 1204, failedCount: 0, deferredCount: 0 },
+        responseExample: { totalRecipients: 1204, sentCount: 1204, failedCount: 0 },
       },
       {
         id: "schedule-campaign",

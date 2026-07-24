@@ -2,9 +2,9 @@ import { ok, fail, withErrorHandling, NotFoundError } from "@/lib/api/response";
 import { requireWorkspaceAccess } from "@/lib/auth/require-workspace-access";
 import { dispatchCampaign } from "@/lib/campaigns/dispatch";
 
-// Sends up to INLINE_SEND_LIMIT recipients with bounded concurrency (see
+// Sends all recipients inline with bounded concurrency (see
 // lib/campaigns/dispatch.ts) — give it real headroom on platforms with a
-// hard request timeout. Lower this (and INLINE_SEND_LIMIT) if your hosting
+// hard request timeout. Lower SEND_CONCURRENCY if your hosting
 // plan caps function duration below 60s.
 export const maxDuration = 60;
 

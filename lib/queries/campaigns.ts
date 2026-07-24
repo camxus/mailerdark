@@ -158,7 +158,7 @@ export function useSendCampaignNow(workspaceId: string, id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () =>
-      apiFetch<{ totalRecipients: number; sentCount: number; failedCount: number; deferredCount: number }>(
+      apiFetch<{ totalRecipients: number; sentCount: number; failedCount: number }>(
         `/api/workspaces/${workspaceId}/campaigns/${id}/send-now`,
         { method: "POST" }
       ),

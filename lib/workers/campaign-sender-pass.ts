@@ -13,7 +13,7 @@ const BATCH_SIZE = Number(process.env.WORKER_BATCH_SIZE ?? 50);
  *     SENDING and creates its EmailJobs.
  *  2. Sends every QUEUED EmailJob — this is what actually delivers mail
  *     for audiences too large for the inline send-now path to finish
- *     within a single request (see INLINE_SEND_LIMIT in lib/campaigns/dispatch.ts).
+ *     within a single request (see dispatchCampaign in lib/campaigns/dispatch.ts).
  *
  * Takes `db` as a parameter rather than importing a singleton so the CLI
  * script (its own dedicated PrismaClient, long-lived process) and the
