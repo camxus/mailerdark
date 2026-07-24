@@ -33,6 +33,7 @@ export function SubscribersPage({ workspaceId }: { workspaceId: string }) {
     search, groupId, status, cursor, limit: PAGE_SIZE,
   });
   const batchDelete = useBatchDeleteSubscribers(workspaceId);
+  const { data: groups } = useGroups(workspaceId);
 
   const pageSubscribers = data?.subscribers ?? [];
   const stats = data?.stats;
