@@ -153,7 +153,7 @@ export function ImportSubscribersDialog({
             customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
           };
         })
-        .filter((s): s is { email: string; customFields?: Record<string, unknown> } => s !== null);
+        .filter((s): s is { email: string; customFields: Record<string, unknown> | undefined } => s !== null);
 
       if (subscribers.length === 0) {
         throw new Error("No valid subscribers found in the CSV.");
