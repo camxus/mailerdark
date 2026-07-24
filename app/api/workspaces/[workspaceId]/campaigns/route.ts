@@ -36,12 +36,19 @@ export const POST = withErrorHandling(async (req: Request, { params }: RoutePara
 
   const body = createCampaignSchema.parse(await req.json());
 
+  const [settings] = await Promise.all([
+    db.workspaceSettings.findUnique({ where: { workspaceId } }),
+  ]);
+
+  const fromName = body.fromName || settings?.fromName || "";
+  const fromEmail = body.fromEmail || settings?.fromEmail || "";
+
   const campaign = await db.campaign.create({
     data: {
       workspaceId,
       subject: body.subject,
-      fromName: body.fromName,
-      fromEmail: body.fromEmail,
+      fromName,
+      fromEmail,
       replyTo: body.replyTo,
       htmlContent: body.htmlContent,
       // @ts-expect-error Prisma Json type is incompatible with application Audience type

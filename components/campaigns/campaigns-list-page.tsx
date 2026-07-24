@@ -27,11 +27,15 @@ export function CampaignsListPage({ workspaceId }: { workspaceId: string }) {
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 
   async function handleCreate(template: CampaignTemplate | null) {
-    const campaign = await createCampaign.mutateAsync({
-      subject: template?.subject ?? "Untitled campaign",
-      htmlContent: template?.html ?? "<p>Write your email here…</p>",
-    });
-    router.push(`/w/${workspaceId}/campaigns/${campaign.id}/edit`);
+    try {
+      const campaign = await createCampaign.mutateAsync({
+        subject: template?.subject ?? "Untitled campaign",
+        htmlContent: template?.html ?? "<p>Write your email here…</p>",
+      });
+      router.push(`/w/${workspaceId}/campaigns/${campaign.id}/edit`);
+    } catch (err) {
+      console.error("Failed to create campaign:", err);
+    }
   }
 
   return (

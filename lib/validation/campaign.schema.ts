@@ -18,8 +18,8 @@ export const audienceSchema = z.object({
 
 export const createCampaignSchema = z.object({
   subject: z.string().min(1).max(200),
-  fromName: z.string().min(1).max(120),
-  fromEmail: z.string().email(),
+  fromName: z.string().min(1).max(120).optional(),
+  fromEmail: z.string().email().optional(),
   replyTo: z.string().email().optional(),
   htmlContent: z.string().min(1),
   audience: audienceSchema.optional(),

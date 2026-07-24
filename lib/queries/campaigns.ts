@@ -78,17 +78,19 @@ export function useCampaignStats(workspaceId: string, id: string, options?: { po
 export function useCreateCampaign(workspaceId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input?: { subject?: string; fromName?: string; fromEmail?: string; htmlContent?: string }) =>
-      apiFetch<Campaign>(`/api/workspaces/${workspaceId}/campaigns`, {
+    mutationFn: (input?: { subject?: string; fromName?: string; fromEmail?: string; htmlContent?: string }) => {
+      const payload: Record<string, unknown> = {
+        subject: input?.subject ?? "Untitled campaign",
+        htmlContent: input?.htmlContent ?? "<p>Write your email here…</p>",
+        audience: {},
+      };
+      if (input?.fromName) payload.fromName = input.fromName;
+      if (input?.fromEmail) payload.fromEmail = input.fromEmail;
+      return apiFetch<Campaign>(`/api/workspaces/${workspaceId}/campaigns`, {
         method: "POST",
-        body: JSON.stringify({
-          subject: input?.subject ?? "Untitled campaign",
-          fromName: input?.fromName ?? "",
-          fromEmail: input?.fromEmail ?? "",
-          htmlContent: input?.htmlContent ?? "<p>Write your email here…</p>",
-          audience: {},
-        }),
-      }),
+        body: JSON.stringify(payload),
+      });
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key.list(workspaceId) }),
   });
 }
