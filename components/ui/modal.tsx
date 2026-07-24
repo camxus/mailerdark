@@ -22,14 +22,16 @@ export function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
-      <div className="w-full max-w-sm sm:max-w-md rounded-lg border border-line bg-surface p-4 sm:p-5 shadow-lg">
-        <div className="mb-3 sm:mb-4 flex items-center justify-between">
+      <div className="flex max-h-[90vh] w-full max-w-sm flex-col overflow-hidden rounded-lg border border-line bg-surface sm:max-w-md shadow-lg">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3 sm:px-5 sm:py-4">
           <h2 className="text-base font-semibold text-ink">{title}</h2>
           <button onClick={onClose} className="rounded-md p-1 text-ink-soft hover:bg-canvas">
             <X size={18} />
           </button>
         </div>
-        {children}
+        <div className="overflow-y-auto px-4 py-3 sm:px-5 sm:py-4">
+          {children}
+        </div>
       </div>
     </div>
   );
