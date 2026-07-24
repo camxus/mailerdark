@@ -19,7 +19,7 @@ import { mapWithConcurrency } from "@/lib/utils/concurrency";
  * 1/10th the wall-clock time of a sequential loop, which matters a lot on
  * a platform with a hard per-request execution time limit.
  */
-const INLINE_SEND_LIMIT = 200;
+const INLINE_SEND_LIMIT = 300;
 const SEND_CONCURRENCY = 10;
 
 export async function dispatchCampaign(workspaceId: string, campaignId: string) {

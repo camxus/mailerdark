@@ -93,6 +93,10 @@ function CampaignEditorForm({
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (isLive) return;
+    if (updateCampaign.isPending) return;
+    if (sendNow.isPending) return;
+
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       const payload: Record<string, unknown> = {
@@ -108,7 +112,7 @@ function CampaignEditorForm({
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [subject, fromName, fromEmail, replyTo, htmlContent, audience, updateCampaign]);
+  }, [subject, fromName, fromEmail, replyTo, htmlContent, audience, isLive, updateCampaign.isPending, sendNow.isPending]);
 
   // Debounce preview refresh
   useEffect(() => {
