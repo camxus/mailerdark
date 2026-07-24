@@ -20,7 +20,7 @@ export function SnippetsSidebar({
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const dynamic = fields ? fieldSnippets(fields) : [];
-  // Skip the built-in {{email}} since it's already in staticSnippets
+  // Skip the built-in {$email} since it's already in staticSnippets
   const allSnippets = [...staticSnippets, ...dynamic.filter((s) => s.id !== "merge-email")];
   const filtered = search.trim()
     ? allSnippets.filter(

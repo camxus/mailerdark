@@ -14,22 +14,22 @@ export const staticSnippets: Snippet[] = [
     label: "Unsubscribe link",
     description: "One-click unsubscribe (auto-injected by Mailerdark, but add it yourself for control over placement)",
     category: "tracking",
-    code: `<a href="{{unsubscribe_url}}" style="color:#8a8a8a;font-size:12px;">Unsubscribe</a>`,
+    code: `<a href="{$unsubscribe_url}" style="color:#8a8a8a;font-size:12px;">Unsubscribe</a>`,
   },
   {
     id: "tracking-pixel",
     label: "Open tracking pixel",
     description: "1×1 transparent pixel (auto-injected by Mailerdark before </body>)",
     category: "tracking",
-    code: `<img src="{{open_tracking_url}}" width="1" height="1" alt="" style="display:none;" />`,
+    code: `<img src="{$open_tracking_url}" width="1" height="1" alt="" style="display:none;" />`,
   },
   // ─── Merge fields ────────────────────────────────────────────────────────
   {
     id: "merge-email",
-    label: "{{email}}",
+    label: "{$email}",
     description: "Subscriber's email address",
     category: "merge",
-    code: `{{email}}`,
+    code: `{$email}`,
   },
   // ─── Blocks ──────────────────────────────────────────────────────────────
   {
@@ -104,7 +104,7 @@ export const staticSnippets: Snippet[] = [
         Your Company · 123 Example Street · City, Country
       </p>
       <p style="margin:0;font-family:sans-serif;font-size:12px;color:#8a8a8a;">
-        <a href="{{unsubscribe_url}}" style="color:#8a8a8a;">Unsubscribe</a>
+        <a href="{$unsubscribe_url}" style="color:#8a8a8a;">Unsubscribe</a>
         &nbsp;·&nbsp;
         <a href="https://example.com/privacy" style="color:#8a8a8a;">Privacy policy</a>
       </p>
@@ -142,7 +142,7 @@ export const staticSnippets: Snippet[] = [
           <!-- Body -->
           <tr>
             <td style="padding:32px 40px;">
-              <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#14171a;">Hello {{email}},</h1>
+              <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#14171a;">Hello {$email},</h1>
               <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4b5358;">
                 Your content goes here.
               </p>
@@ -163,7 +163,7 @@ export const staticSnippets: Snippet[] = [
           <tr>
             <td align="center" style="padding:24px 40px;background:#f6f5f1;border-top:1px solid #e4e2dc;">
               <p style="margin:0;font-size:12px;color:#8a8a8a;">
-                © 2026 Your Company · <a href="{{unsubscribe_url}}" style="color:#8a8a8a;">Unsubscribe</a>
+                © 2026 Your Company · <a href="{$unsubscribe_url}" style="color:#8a8a8a;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -198,10 +198,10 @@ export const staticSnippets: Snippet[] = [
 export function fieldSnippets(fields: { key: string; label: string }[]): Snippet[] {
   return fields.map((f) => ({
     id: `merge-${f.key}`,
-    label: `{{${f.key}}}`,
+    label: `{$${f.key}}`,
     description: f.label,
     category: "merge" as const,
-    code: `{{${f.key}}}`,
+    code: `{$${f.key}}`,
   }));
 }
 

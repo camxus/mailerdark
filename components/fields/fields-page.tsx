@@ -50,7 +50,7 @@ export function FieldsPage({ workspaceId }: { workspaceId: string }) {
               <li key={f.id} className="flex items-center justify-between px-4 py-3">
                 <div>
                   <p className="text-sm font-medium text-ink">{f.label}</p>
-                  <p className="font-mono text-xs text-ink-soft">{`{{${f.key}}}`}</p>
+                  <p className="font-mono text-xs text-ink-soft">{`{$${f.key}}`}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge>{fieldTypeLabels[f.type]}</Badge>

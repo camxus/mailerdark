@@ -40,7 +40,7 @@ const defaultNodeData: Record<AutomationNodeType, AutomationNodeData> = {
   trigger: { type: "trigger", triggerType: "SUBSCRIBER_CREATED" },
   filter: { type: "filter", conditions: [{ fieldKey: "email", operator: "is_set" }] },
   delay: { type: "delay", unit: "hours", amount: 24 },
-  sendEmail: { type: "sendEmail", subject: "", fromName: "", fromEmail: "", htmlContent: "<p>Hello {{email}},</p>" },
+  sendEmail: { type: "sendEmail", subject: "", fromName: "", fromEmail: "", htmlContent: "<p>Hello {$email},</p>" },
   addToGroup: { type: "addToGroup", groupId: "" },
   removeFromGroup: { type: "removeFromGroup", groupId: "" },
   exit: { type: "exit", label: "Done" },

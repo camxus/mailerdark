@@ -23,11 +23,11 @@ const WELCOME_EMAIL_HTML = `<!DOCTYPE html>
       <table width="600" cellpadding="0" cellspacing="0" role="presentation"
         style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;">
         <tr><td style="padding:36px 40px 12px;">
-          <h1 style="margin:0 0 12px;font-size:26px;font-weight:700;color:#14171a;">Welcome, {{first_name}}!</h1>
+          <h1 style="margin:0 0 12px;font-size:26px;font-weight:700;color:#14171a;">Welcome, {$first_name}!</h1>
           <p style="margin:0 0 24px;font-size:16px;line-height:1.7;color:#4b5358;">
             Thanks for joining. We're excited to have you on board.
           </p>
-          <a href="{{cta_url}}"
+          <a href="{$cta_url}"
             style="display:inline-block;background:#0e7c7b;color:#fff;font-size:15px;font-weight:600;
                    text-decoration:none;padding:13px 30px;border-radius:6px;">
             Get started →
@@ -35,7 +35,7 @@ const WELCOME_EMAIL_HTML = `<!DOCTYPE html>
         </td></tr>
         <tr><td align="center" style="padding:20px 40px 28px;background:#f6f5f1;border-top:1px solid #e4e2dc;">
           <p style="margin:0;font-size:12px;color:#9a9a9a;">
-            <a href="{{unsubscribe_url}}" style="color:#9a9a9a;">Unsubscribe</a>
+            <a href="{$unsubscribe_url}" style="color:#9a9a9a;">Unsubscribe</a>
           </p>
         </td></tr>
       </table>
@@ -63,9 +63,9 @@ export const automationTemplates: AutomationTemplate[] = [
           type: "sendEmail",
           position: { x: 250, y: 0 },
           data: {
-            subject: "Welcome to {{company_name}}!",
-            fromName: "The {{company_name}} team",
-            fromEmail: "{{from_email}}",
+            subject: "Welcome to {$company_name}!",
+            fromName: "The {$company_name} team",
+            fromEmail: "{$from_email}",
             htmlContent: WELCOME_EMAIL_HTML,
           },
         },
@@ -97,8 +97,8 @@ export const automationTemplates: AutomationTemplate[] = [
           position: { x: 1000, y: 100 },
           data: {
             subject: "We'd love your feedback",
-            fromName: "The {{company_name}} team",
-            fromEmail: "{{from_email}}",
+            fromName: "The {$company_name} team",
+            fromEmail: "{$from_email}",
             htmlContent: `<p>Let us know how we're doing!</p>`,
           },
         },
@@ -145,9 +145,9 @@ export const automationTemplates: AutomationTemplate[] = [
           type: "sendEmail",
           position: { x: 500, y: 80 },
           data: {
-            subject: "We miss you, {{first_name}}",
-            fromName: "The {{company_name}} team",
-            fromEmail: "{{from_email}}",
+            subject: "We miss you, {$first_name}",
+            fromName: "The {$company_name} team",
+            fromEmail: "{$from_email}",
             htmlContent: `<p>We'd love to see you back!</p>`,
           },
         },

@@ -289,7 +289,7 @@ function CampaignEditorForm({
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   disabled={isLive}
-                  placeholder="Your subject line — {{first_name}} merge fields work here"
+                  placeholder="Your subject line — {$first_name} merge fields work here"
                 />
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

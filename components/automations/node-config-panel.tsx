@@ -159,7 +159,7 @@ function SendEmailConfig({ data, patch, workspaceId, automationId, nodeId }: { d
 
   return (
     <div className="space-y-3">
-      <div><Label>Subject</Label><Input value={data.subject} onChange={(e) => patch({ subject: e.target.value })} placeholder="Subject line (supports {{field}})" /></div>
+      <div><Label>Subject</Label><Input value={data.subject} onChange={(e) => patch({ subject: e.target.value })} placeholder="Subject line (supports {$field})" /></div>
       <div><Label>From name</Label><Input value={data.fromName} onChange={(e) => patch({ fromName: e.target.value })} /></div>
       <div><Label>From email</Label><Input type="email" value={data.fromEmail} onChange={(e) => patch({ fromEmail: e.target.value })} /></div>
       <div><Label>Reply-to (optional)</Label><Input type="email" value={data.replyTo ?? ""} onChange={(e) => patch({ replyTo: e.target.value || undefined })} /></div>

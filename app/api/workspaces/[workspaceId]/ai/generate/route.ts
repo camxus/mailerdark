@@ -16,10 +16,10 @@ const SYSTEM_PROMPT = `You are an expert HTML email designer and copywriter. Whe
 - Use inline CSS only (no <style> blocks, no external stylesheets) for maximum email client compatibility.
 - Use table-based layouts for Outlook compatibility.
 - Keep designs clean, readable, and mobile-friendly.
-- Support merge fields in {{double_braces}} format for personalisation.
+ - Support merge fields in {$braces} format for personalisation.
 - The base palette is: background #f6f5f1, accent teal #0e7c7b, text #14171a, muted #4b5358.
 - If given existing HTML to edit, preserve the overall structure unless asked to change it.
-- Always include an unsubscribe link placeholder: <a href="{{unsubscribe_url}}">Unsubscribe</a>`;
+ - Always include an unsubscribe link placeholder: <a href="{$unsubscribe_url}">Unsubscribe</a>`;
 
 type RouteParams = { params: Promise<{ workspaceId: string }> };
 

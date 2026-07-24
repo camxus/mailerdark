@@ -2,7 +2,7 @@ import { buildOpenTrackingUrl, buildUnsubscribeUrl, buildClickTrackingUrl } from
 
 type MergeSubscriber = { email: string; customFields: Record<string, unknown> };
 
-const MERGE_FIELD_PATTERN = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
+const MERGE_FIELD_PATTERN = /\{\$\s*([a-zA-Z0-9_]+)\s*\}/g;
 const ANCHOR_HREF_PATTERN = /(<a\s+(?:[^>]*?\s)?href=["'])([^"']+)(["'][^>]*>)/gi;
 
 export function substituteMergeFields(template: string, subscriber: MergeSubscriber): string {
