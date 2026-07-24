@@ -6,6 +6,8 @@ import { getEmailProvider } from "@/lib/email/get-provider";
 import { EmailProviderError } from "@/lib/email/provider";
 import { publishEvent } from "@/lib/events/publish";
 
+const BATCH_SIZE = 50;
+
 export async function dispatchCampaign(workspaceId: string, campaignId: string) {
   const campaign = await db.campaign.findFirst({ where: { id: campaignId, workspaceId } });
   if (!campaign) throw new NotFoundError("Campaign not found.");
@@ -26,10 +28,30 @@ export async function dispatchCampaign(workspaceId: string, campaignId: string) 
 
   const provider = getEmailProvider(settings?.resendApiKey || undefined);
 
+  const existingJobs = await db.emailJob.findMany({
+    where: { campaignId, subscriberId: { in: subscribers.map((s) => s.id) } },
+  });
+  const subscriberIdsWithJobs = new Set(existingJobs.map((j) => j.subscriberId));
+  const newSubscribers = subscribers.filter((s) => !subscriberIdsWithJobs.has(s.id));
+
+  const newJobs = await Promise.all(
+    newSubscribers.map((s) =>
+      db.emailJob.create({
+        data: { workspaceId, subscriberId: s.id, campaignId, status: "QUEUED" },
+      })
+    )
+  );
+
+  const stillQueued = existingJobs.filter((j) => j.status === "QUEUED");
+  const jobsToProcess = [...stillQueued, ...newJobs];
+
   let sentCount = 0;
   let failedCount = 0;
 
-  for (const subscriber of subscribers) {
+  for (const job of jobsToProcess) {
+    const subscriber = subscribers.find((s) => s.id === job.subscriberId);
+    if (!subscriber) continue;
+
     const rendered = renderCampaignEmail({
       subject: campaign.subject,
       htmlContent: campaign.htmlContent,
@@ -37,6 +59,7 @@ export async function dispatchCampaign(workspaceId: string, campaignId: string) 
         email: subscriber.email,
         customFields: subscriber.customFields as Record<string, unknown>,
       },
+      jobId: job.id,
     });
 
     try {
@@ -46,11 +69,19 @@ export async function dispatchCampaign(workspaceId: string, campaignId: string) 
         replyTo: campaign.replyTo ?? undefined,
         subject: rendered.subject,
         html: rendered.html,
+        idempotencyKey: job.id,
+      });
+      await db.emailJob.update({
+        where: { id: job.id },
+        data: { status: "SENT", sentAt: new Date() },
       });
       sentCount += 1;
     } catch (error) {
       const message = error instanceof EmailProviderError ? error.message : "Send failed.";
-      console.error(`Failed to send to ${subscriber.email}: ${message}`);
+      await db.emailJob.update({
+        where: { id: job.id },
+        data: { status: "FAILED", error: message },
+      });
       failedCount += 1;
     }
   }
