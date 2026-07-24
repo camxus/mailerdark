@@ -52,7 +52,7 @@ export function useSubscriber(workspaceId: string, id: string) {
 export function useCreateSubscriber(workspaceId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { email: string; groupIds?: string[] }) =>
+    mutationFn: (input: { email: string; groupIds?: string[]; customFields?: Record<string, unknown> }) =>
       apiFetch<Subscriber>(`/api/workspaces/${workspaceId}/subscribers`, {
         method: "POST",
         body: JSON.stringify(input),
