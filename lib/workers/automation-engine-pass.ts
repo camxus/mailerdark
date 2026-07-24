@@ -110,7 +110,10 @@ async function advanceRuns(db: PrismaClient) {
               data: { workspaceId: run.automation.workspaceId, subscriberId: run.subscriberId, automationRunId: run.id, status: "QUEUED" },
             });
             const rendered = renderCampaignEmail({ subject: emailData.subject, htmlContent: emailData.htmlContent, subscriber, jobId: job.id });
-            const provider = getEmailProvider();
+            const [settings] = await Promise.all([
+              db.workspaceSettings.findUnique({ where: { workspaceId: run.automation.workspaceId } }),
+            ]);
+            const provider = getEmailProvider(settings?.resendApiKey || undefined);
             await provider.send({ to: subscriber.email, from: `${emailData.fromName} <${emailData.fromEmail}>`, replyTo: emailData.replyTo, subject: rendered.subject, html: rendered.html, idempotencyKey: job.id });
             await db.emailJob.update({ where: { id: job.id }, data: { status: "SENT", sentAt: new Date() } });
           }

@@ -21,6 +21,11 @@ export type GeneralSettings = {
   timezone: string;
 };
 
+export type SendingSettings = {
+  resendApiKeyMasked: string;
+  resendApiKeySet: boolean;
+};
+
 export type AiModel = {
   id: string;
   name: string;
@@ -78,5 +83,24 @@ export function useUpdateGeneralSettings(workspaceId: string) {
         body: JSON.stringify(input),
       }),
     onSuccess: (data) => queryClient.setQueryData(["general-settings", workspaceId], data),
+  });
+}
+
+export function useSendingSettings(workspaceId: string) {
+  return useQuery({
+    queryKey: ["sending-settings", workspaceId],
+    queryFn: () => apiFetch<SendingSettings>(`/api/workspaces/${workspaceId}/settings/sending`),
+  });
+}
+
+export function useUpdateSendingSettings(workspaceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { resendApiKey?: string }) =>
+      apiFetch<SendingSettings>(`/api/workspaces/${workspaceId}/settings/sending`, {
+        method: "PATCH",
+        body: JSON.stringify(input),
+      }),
+    onSuccess: (data) => queryClient.setQueryData(["sending-settings", workspaceId], data),
   });
 }

@@ -1,9 +1,11 @@
 import { EmailProvider, EmailProviderError, SendEmailInput, SendEmailResult } from "../provider";
-import { getResendClient } from "../resend-client";
+import { createResendClient } from "../resend-client";
 
 export class ResendEmailProvider implements EmailProvider {
+  constructor(private readonly apiKey?: string) {}
+
   async send(input: SendEmailInput): Promise<SendEmailResult> {
-    const resend = getResendClient();
+    const resend = createResendClient(this.apiKey);
 
     const { data, error } = await resend.emails.send(
       {
@@ -19,8 +21,6 @@ export class ResendEmailProvider implements EmailProvider {
     );
 
     if (error) {
-      // Resend's SDK doesn't expose a status code here; treat rate limits
-      // and transient-sounding messages as retryable, everything else as not.
       const retryable = /rate.?limit|timeout|temporar/i.test(error.message ?? "");
       throw new EmailProviderError(error.message ?? "Resend send failed", retryable);
     }

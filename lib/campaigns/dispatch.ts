@@ -58,7 +58,11 @@ export async function dispatchCampaign(workspaceId: string, campaignId: string) 
   const jobsToProcessNow = [...stillQueued, ...newJobs].slice(0, INLINE_SEND_LIMIT);
   const totalPending = stillQueued.length + newJobs.length;
   const deferredCount = totalPending - jobsToProcessNow.length;
-  const provider = getEmailProvider();
+  const [settings] = await Promise.all([
+    db.workspaceSettings.findUnique({ where: { workspaceId } }),
+  ]);
+
+  const provider = getEmailProvider(settings?.resendApiKey || undefined);
 
   let sentCount = 0;
   let failedCount = 0;

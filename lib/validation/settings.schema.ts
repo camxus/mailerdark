@@ -15,5 +15,10 @@ export const updateAiSettingsSchema = z.object({
   selectedModel: z.string().max(200).optional(),
 });
 
+export const updateSendingSettingsSchema = z.object({
+  resendApiKey: z.string().max(200).optional(),
+});
+
 export type UpdateGeneralSettingsInput = z.infer<typeof updateGeneralSettingsSchema>;
 export type UpdateAiSettingsInput = z.infer<typeof updateAiSettingsSchema>;
+export type UpdateSendingSettingsInput = z.infer<typeof updateSendingSettingsSchema>;

@@ -1,5 +1,5 @@
 import { resolveTxt } from "dns/promises";
-import { getResendClient } from "@/lib/email/resend-client";
+import { createResendClient } from "@/lib/email/resend-client";
 
 export type DnsCheckStatus = "PENDING" | "VALID" | "INVALID";
 
@@ -31,7 +31,7 @@ function mapRecordStatus(status: string | undefined): DnsCheckStatus {
  * requires for that specific domain.
  */
 export async function registerDomain(domain: string): Promise<DomainRegistration> {
-  const resend = getResendClient();
+  const resend = createResendClient();
   const { data, error } = await resend.domains.create({ name: domain });
 
   if (error || !data) {
@@ -58,7 +58,7 @@ export async function registerDomain(domain: string): Promise<DomainRegistration
  * something tied to Resend's sending setup.
  */
 export async function checkDomainStatus(resendDomainId: string, domain: string): Promise<DomainCheckResult> {
-  const resend = getResendClient();
+  const resend = createResendClient();
 
   // Ask Resend to re-run its own check, then fetch the resulting status —
   // verify() alone doesn't return per-record detail, get() does.
@@ -97,6 +97,6 @@ async function checkDmarcRecord(domain: string): Promise<DnsCheckStatus> {
 }
 
 export async function removeDomain(resendDomainId: string): Promise<void> {
-  const resend = getResendClient();
+  const resend = createResendClient();
   await resend.domains.remove(resendDomainId);
 }

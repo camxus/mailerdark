@@ -48,6 +48,7 @@ model WorkspaceSettings {
   fromName       String?  @map("from_name")
   fromEmail      String?  @map("from_email")
   timezone       String   @default("UTC")
+  resendApiKey   String?  @map("resend_api_key")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)

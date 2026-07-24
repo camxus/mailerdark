@@ -35,6 +35,12 @@ export default async function SettingsPage({
       available: true,
     },
     {
+      href: `/w/${workspaceId}/settings/sending`,
+      title: "Sending settings",
+      description: "Configure Resend API key for sending emails.",
+      available: true,
+    },
+    {
       href: `/w/${workspaceId}/settings/api`,
       title: "API & documentation",
       description: "API keys and interactive API reference.",

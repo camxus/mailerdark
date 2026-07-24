@@ -62,14 +62,19 @@ async function sendQueuedBatch(db: PrismaClient) {
 
   if (jobs.length === 0) return { processed: 0 };
 
-  const provider = getEmailProvider();
+  const workspaceIds = [...new Set(jobs.filter((j) => j.campaign).map((j) => j.campaign!.workspaceId))];
+  const settingsRows = await db.workspaceSettings.findMany({
+    where: { workspaceId: { in: workspaceIds } },
+  });
+  const settingsByWorkspace = new Map(settingsRows.map((s) => [s.workspaceId, s]));
 
   for (const job of jobs) {
     if (!job.campaign) {
-      // EmailJobs without a campaign belong to automations — left QUEUED
-      // for the AutomationEngineWorker to pick up, not this one.
       continue;
     }
+
+    const workspaceSettings = settingsByWorkspace.get(job.campaign.workspaceId);
+    const provider = getEmailProvider(workspaceSettings?.resendApiKey || undefined);
 
     const rendered = renderCampaignEmail({
       subject: job.campaign.subject,

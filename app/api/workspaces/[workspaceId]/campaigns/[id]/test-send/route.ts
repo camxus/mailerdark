@@ -15,11 +15,16 @@ export const POST = withErrorHandling(async (req: Request, { params }: RoutePara
   const auth = await requireWorkspaceAccess(req, workspaceId, "campaigns:write");
   if (!auth.ok) return auth.response;
 
-  const campaign = await db.campaign.findFirst({ where: { id, workspaceId } });
+  const [campaign, settings] = await Promise.all([
+    db.campaign.findFirst({ where: { id, workspaceId } }),
+    db.workspaceSettings.findUnique({ where: { workspaceId } }),
+  ]);
+
   if (!campaign) return fail(404, "NOT_FOUND", "Campaign not found.");
 
+  const provider = getEmailProvider(settings?.resendApiKey || undefined);
+
   const body = testSendSchema.parse(await req.json());
-  const provider = getEmailProvider();
 
   const results: { email: string; ok: boolean; error?: string }[] = [];
 
