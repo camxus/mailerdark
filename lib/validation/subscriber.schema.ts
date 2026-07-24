@@ -40,6 +40,10 @@ export const importSubscribersSchema = z.object({
   groupIds: z.array(z.string().uuid()).optional(),
 });
 
+export const batchDeleteSubscribersSchema = z.object({
+  subscriberIds: z.array(z.string().uuid()).min(1).max(500),
+});
+
 export type CreateSubscriberInput = z.infer<typeof createSubscriberSchema>;
 export type UpdateSubscriberInput = z.infer<typeof updateSubscriberSchema>;
 export type FieldFilter = z.infer<typeof fieldFilterSchema>;

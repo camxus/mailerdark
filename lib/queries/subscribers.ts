@@ -23,19 +23,30 @@ export type SubscriberDetail = Subscriber & {
   }[];
 };
 
+export type SubscribersPageData = {
+  subscribers: Subscriber[];
+  nextCursor: string | null;
+  stats: {
+    total: number;
+    byStatus: Record<string, number>;
+  };
+};
+
 export function useSubscribers(
   workspaceId: string,
-  filters: { groupId?: string; status?: string; search?: string }
+  filters: { groupId?: string; status?: string; search?: string; cursor?: string; limit?: number }
 ) {
   const params = new URLSearchParams();
   if (filters.groupId) params.set("groupId", filters.groupId);
   if (filters.status) params.set("status", filters.status);
   if (filters.search) params.set("search", filters.search);
+  if (filters.cursor) params.set("cursor", filters.cursor);
+  if (filters.limit) params.set("limit", String(filters.limit));
 
   return useQuery({
     queryKey: ["subscribers", workspaceId, filters],
     queryFn: () =>
-      apiFetch<{ subscribers: Subscriber[]; nextCursor: string | null }>(
+      apiFetch<SubscribersPageData>(
         `/api/workspaces/${workspaceId}/subscribers?${params.toString()}`
       ),
   });
@@ -113,5 +124,17 @@ export function useSetSubscriberGroup(workspaceId: string, subscriberId: string)
       queryClient.invalidateQueries({ queryKey: ["subscriber", workspaceId, subscriberId] });
       queryClient.invalidateQueries({ queryKey: ["subscribers", workspaceId] });
     },
+  });
+}
+
+export function useBatchDeleteSubscribers(workspaceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (subscriberIds: string[]) =>
+      apiFetch<{ deleted: number }>(`/api/workspaces/${workspaceId}/subscribers/batch`, {
+        method: "POST",
+        body: JSON.stringify({ subscriberIds }),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["subscribers", workspaceId] }),
   });
 }

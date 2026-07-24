@@ -33,6 +33,15 @@ export const GET = withErrorHandling(async (req: Request, { params }: RouteParam
       : {}),
   };
 
+  const [totalResult, statusCounts] = await Promise.all([
+    db.subscriber.count({ where: { workspaceId, ...(query.status ? { status: query.status } : {}), ...(query.groupId ? { groups: { some: { groupId: query.groupId } } } : {}), ...(query.search ? { email: { contains: query.search, mode: "insensitive" as const } } : {}) } }),
+    db.subscriber.groupBy({
+      by: ["status"],
+      where: { workspaceId },
+      _count: { _all: true },
+    }),
+  ]);
+
   const subscribers = await db.subscriber.findMany({
     where,
     take: query.limit + 1,
@@ -44,9 +53,17 @@ export const GET = withErrorHandling(async (req: Request, { params }: RouteParam
   const hasMore = subscribers.length > query.limit;
   const page = hasMore ? subscribers.slice(0, query.limit) : subscribers;
 
+  const stats = {
+    total: totalResult,
+    byStatus: Object.fromEntries(
+      statusCounts.map((s) => [s.status, s._count._all])
+    ) as Record<string, number>,
+  };
+
   return ok({
     subscribers: page.map(serializeSubscriber),
     nextCursor: hasMore ? page[page.length - 1].id : null,
+    stats,
   });
 });
 
