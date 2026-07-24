@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, EmptyState } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { SubscriberStatusBadge } from "@/components/ui/badge";
 import { useSubscribers } from "@/lib/queries/subscribers";
 import { useGroups } from "@/lib/queries/groups";
 import { AddSubscriberDialog } from "./add-subscriber-dialog";
+import { ImportSubscribersDialog } from "./import-subscribers-dialog";
 
 export function SubscribersPage({ workspaceId }: { workspaceId: string }) {
   const searchParams = useSearchParams();
@@ -20,6 +21,7 @@ export function SubscribersPage({ workspaceId }: { workspaceId: string }) {
   );
   const [status, setStatus] = useState<string | undefined>();
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
 
   const { data, isLoading } = useSubscribers(workspaceId, { search, groupId, status });
   const { data: groups } = useGroups(workspaceId);
@@ -33,6 +35,9 @@ export function SubscribersPage({ workspaceId }: { workspaceId: string }) {
         </div>
         <Button onClick={() => setShowAddDialog(true)}>
           <Plus size={16} /> Add subscriber
+        </Button>
+        <Button variant="secondary" onClick={() => setShowImportDialog(true)}>
+          <Upload size={16} /> Import CSV
         </Button>
       </div>
 
@@ -126,6 +131,9 @@ export function SubscribersPage({ workspaceId }: { workspaceId: string }) {
 
       {showAddDialog && (
         <AddSubscriberDialog workspaceId={workspaceId} onClose={() => setShowAddDialog(false)} />
+      )}
+      {showImportDialog && (
+        <ImportSubscribersDialog workspaceId={workspaceId} onClose={() => setShowImportDialog(false)} />
       )}
     </div>
   );
