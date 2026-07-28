@@ -47,7 +47,7 @@ export const previewSchema = z.object({
 });
 
 export const resendCampaignSchema = z.object({
-  mode: z.enum(["non_openers", "new_subscribers", "duplicate"]),
+  mode: z.enum(["non_openers", "new_subscribers", "duplicate", "failed", "non_receivers"]),
 });
 
 export type Audience = z.infer<typeof audienceSchema>;

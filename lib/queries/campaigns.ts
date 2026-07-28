@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-fetch";
 import type { Audience } from "@/lib/validation/campaign.schema";
+import type { JobStatus } from "@prisma/client";
 
 export type CampaignStatus = "DRAFT" | "SCHEDULED" | "SENDING" | "SENT" | "FAILED" | "PAUSED";
 
@@ -43,6 +44,16 @@ export type CampaignStats = {
   unsubscribes: number;
   openRate: number;
   clickRate: number;
+};
+
+export type CampaignRecipient = {
+  id: string;
+  email: string;
+  status: JobStatus;
+  sentAt: string | null;
+  error: string | null;
+  opens: number;
+  clicks: number;
 };
 
 const key = {
@@ -182,7 +193,7 @@ export function usePauseCampaign(workspaceId: string, id: string) {
   });
 }
 
-export type ResendMode = "non_openers" | "new_subscribers" | "duplicate";
+export type ResendMode = "non_openers" | "new_subscribers" | "duplicate" | "failed" | "non_receivers";
 
 export function useResendCampaign(workspaceId: string, id: string) {
   const queryClient = useQueryClient();
@@ -193,5 +204,35 @@ export function useResendCampaign(workspaceId: string, id: string) {
         body: JSON.stringify({ mode }),
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key.list(workspaceId) }),
+  });
+}
+
+export function useCampaignRecipients(workspaceId: string, id: string) {
+  return useQuery({
+    queryKey: ["campaign-recipients", workspaceId, id],
+    queryFn: () => apiFetch<CampaignRecipient[]>(`/api/workspaces/${workspaceId}/campaigns/${id}/recipients`),
+    enabled: Boolean(id),
+  });
+}
+
+export function useExportCampaign(workspaceId: string, id: string) {
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/campaigns/${id}/export`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const message = body?.error?.message ?? "Export failed.";
+        throw new Error(message);
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `campaign-${id}-recipients.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    },
   });
 }

@@ -49,19 +49,42 @@ export const POST = withErrorHandling(async (req: Request, { params }: RoutePara
     newAudience = { subscriberIds: nonOpenerIds };
     subjectPrefix = "Re: ";
   } else if (mode === "new_subscribers") {
-    // Always derive from the original's live filter criteria (not any
-    // frozen subscriberIds it might itself carry from an earlier resend) —
-    // "new subscribers" only makes sense relative to a re-evaluable
-    // definition of the audience, not a one-time snapshot.
     newAudience = {
       groupIds: originalAudience.groupIds,
       fieldFilters: originalAudience.fieldFilters,
       joinedAfter: (original.sentAt ?? original.createdAt).toISOString(),
     };
+  } else if (mode === "failed") {
+    const failedJobs = await db.emailJob.findMany({
+      where: { campaignId: id, status: "FAILED" },
+      select: { subscriberId: true },
+    });
+    const failedIds = failedJobs.map((j) => j.subscriberId);
+
+    if (failedIds.length === 0) {
+      return fail(422, "NO_FAILED", "No failed recipients for this campaign.");
+    }
+
+    newAudience = { subscriberIds: failedIds };
+    subjectPrefix = "Retry: ";
+  } else if (mode === "non_receivers") {
+    const allRecipients = await resolveAudience(workspaceId, originalAudience);
+    const sentJobSubscribers = await db.emailJob.findMany({
+      where: { campaignId: id, status: "SENT" },
+      select: { subscriberId: true },
+    });
+    const sentIds = new Set(sentJobSubscribers.map((j) => j.subscriberId));
+    const nonReceiverIds = allRecipients.filter((s) => !sentIds.has(s.id)).map((s) => s.id);
+
+    if (nonReceiverIds.length === 0) {
+      return fail(422, "ALL_RECEIVED", "Everyone in the audience has already received this campaign.");
+    }
+
+    newAudience = { subscriberIds: nonReceiverIds };
+    subjectPrefix = "Retry: ";
   } else {
-    // duplicate — send to the exact same audience definition again,
-    // verbatim, including a frozen list if that's what the original was.
     newAudience = originalAudience;
+    subjectPrefix = "Re: ";
   }
 
   const recipients = await resolveAudience(workspaceId, newAudience);

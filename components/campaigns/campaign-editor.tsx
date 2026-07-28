@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Send, Calendar, Pause, Trash2,
-  MoreHorizontal, MailX, UserPlus, Copy,
+  MoreHorizontal, MailX, UserPlus, Copy, BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,6 +15,7 @@ import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { AudienceFilter, type AudienceValue } from "@/components/audience/audience-filter";
 import { TestSendDialog } from "./test-send-dialog";
 import { ScheduleDialog } from "./schedule-dialog";
+import { CampaignStatsModal } from "./campaign-stats-modal";
 import {
   useCampaign, useUpdateCampaign, useDeleteCampaign,
   usePreviewCampaign, useSendCampaignNow, usePauseCampaign,
@@ -84,6 +85,7 @@ function CampaignEditorForm({
   const [audience, setAudience] = useState<AudienceValue>(campaign.audience ?? {});
   const [showTestSend, setShowTestSend] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   // Live preview HTML — updated from the server when the editor is idle for 1.5s
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
@@ -225,35 +227,40 @@ function CampaignEditorForm({
               <Pause size={15} /> Pause
             </Button>
           )}
-          {campaign.status === "SENT" && (
+          {(campaign.status === "SENT" || campaign.status === "FAILED" || campaign.status === "PAUSED") && (
             <DropdownMenu
               trigger={
                 <Button variant="secondary" disabled={resendCampaign.isPending}>
-                  <MoreHorizontal size={15} />
-                  {resendCampaign.isPending ? "Creating…" : "More"}
+                  <Send size={15} />
+                  {resendCampaign.isPending ? "Creating…" : "Send again"}
                 </Button>
               }
               items={[
                 {
-                  label: "Resend to non-openers",
-                  description: "Only people who never opened this campaign, as a new draft",
+                  label: "Send to failed",
+                  description: "Only recipients whose previous send failed, as a new draft",
                   icon: <MailX size={15} />,
-                  onClick: () => handleResend("non_openers"),
+                  onClick: () => handleResend("failed"),
                 },
                 {
-                  label: "Resend to new subscribers",
-                  description: "Anyone matching the original audience who joined since this was sent",
+                  label: "Send to non-receivers",
+                  description: "Anyone in the audience who never got this email, as a new draft",
                   icon: <UserPlus size={15} />,
-                  onClick: () => handleResend("new_subscribers"),
+                  onClick: () => handleResend("non_receivers"),
                 },
                 {
-                  label: "Resend to everyone",
+                  label: "Send to all",
                   description: "Send this exact campaign again to its full audience",
                   icon: <Copy size={15} />,
                   onClick: () => handleResend("duplicate"),
                 },
               ]}
             />
+          )}
+          {(campaign.status === "SENT" || campaign.status === "SENDING" || campaign.status === "SCHEDULED" || campaign.status === "PAUSED") && (
+            <Button variant="ghost" onClick={() => setShowStats(true)} title="View stats">
+              <BarChart3 size={15} />
+            </Button>
           )}
         </div>
       </div>
@@ -358,6 +365,14 @@ function CampaignEditorForm({
           campaignId={campaignId}
           onClose={() => setShowSchedule(false)}
           onScheduled={() => setShowSchedule(false)}
+        />
+      )}
+      {showStats && stats && (
+        <CampaignStatsModal
+          workspaceId={workspaceId}
+          campaignId={campaignId}
+          stats={stats}
+          onClose={() => setShowStats(false)}
         />
       )}
     </div>

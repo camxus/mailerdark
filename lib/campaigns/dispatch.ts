@@ -6,8 +6,6 @@ import { getEmailProvider } from "@/lib/email/get-provider";
 import { EmailProviderError } from "@/lib/email/provider";
 import { publishEvent } from "@/lib/events/publish";
 
-const BATCH_SIZE = 50;
-
 export async function dispatchCampaign(workspaceId: string, campaignId: string) {
   const campaign = await db.campaign.findFirst({ where: { id: campaignId, workspaceId } });
   if (!campaign) throw new NotFoundError("Campaign not found.");
@@ -22,8 +20,17 @@ export async function dispatchCampaign(workspaceId: string, campaignId: string) 
 
   await db.campaign.update({ where: { id: campaignId }, data: { status: "SENDING" } });
 
-  const [settings] = await Promise.all([
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const [settings, sentToday] = await Promise.all([
     db.workspaceSettings.findUnique({ where: { workspaceId } }),
+    db.emailJob.count({
+      where: {
+        workspaceId,
+        status: "SENT",
+        sentAt: { gte: today },
+      },
+    }),
   ]);
 
   const provider = getEmailProvider(settings?.resendApiKey || undefined);
@@ -43,7 +50,18 @@ export async function dispatchCampaign(workspaceId: string, campaignId: string) 
   );
 
   const stillQueued = existingJobs.filter((j) => j.status === "QUEUED");
-  const jobsToProcess = [...stillQueued, ...newJobs];
+  let jobsToProcess = [...stillQueued, ...newJobs];
+
+  const limit = settings?.dailySendLimit ?? 100;
+  if (limit > 0 && sentToday >= limit) {
+    throw new Error(`Daily send limit of ${limit} reached. Try again tomorrow.`);
+  }
+
+  const originalJobsCount = jobsToProcess.length;
+  const remainingCapacity = limit > 0 ? limit - sentToday : jobsToProcess.length;
+  if (jobsToProcess.length > remainingCapacity) {
+    jobsToProcess = jobsToProcess.slice(0, remainingCapacity);
+  }
 
   let sentCount = 0;
   let failedCount = 0;
@@ -86,12 +104,22 @@ export async function dispatchCampaign(workspaceId: string, campaignId: string) 
     }
   }
 
-  await db.campaign.update({
-    where: { id: campaignId },
-    data: { status: "SENT", sentAt: new Date() },
-  });
+  const allProcessed = originalJobsCount === 0 || sentCount + failedCount === originalJobsCount;
+  const finalStatus = allProcessed ? "SENT" : "PAUSED";
+
+  if (finalStatus === "SENT") {
+    await db.campaign.update({
+      where: { id: campaignId },
+      data: { status: "SENT", sentAt: new Date() },
+    });
+  } else {
+    await db.campaign.update({
+      where: { id: campaignId },
+      data: { status: "PAUSED" },
+    });
+  }
 
   await publishEvent(workspaceId, "campaign:completed", { campaignId, sentCount, failedCount });
 
-  return { totalRecipients: subscribers.length, sentCount, failedCount };
+  return { totalRecipients: subscribers.length, sentCount, failedCount, remaining: allProcessed ? 0 : originalJobsCount - sentCount - failedCount };
 }
