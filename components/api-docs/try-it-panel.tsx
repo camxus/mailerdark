@@ -95,7 +95,7 @@ export function TryItPanel({
           type="password"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
-          placeholder="md_… or flw_live_…"
+          placeholder="md_…"
         />
       </div>
 
