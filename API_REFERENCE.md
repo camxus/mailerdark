@@ -1,6 +1,6 @@
 # Mailerdark — API Reference
 
-All routes live under `/api/workspaces/{workspaceId}/...` and require either a Supabase session JWT (dashboard) or a scoped API key sent as `Authorization: Bearer flw_live_...` (public/integration use). Every response uses the envelope:
+All routes live under `/api/workspaces/{workspaceId}/...` and require either a Supabase session JWT (dashboard) or a scoped API key sent as `Authorization: Bearer md_...` or `flw_live_...` (public/integration use). Every response uses the envelope:
 
 ```json
 { "data": ..., "error": null }

@@ -26,7 +26,7 @@ function fail(status: number, code: string, message: string): AccessResult {
 /**
  * Authorizes a request against a specific workspace. Supports two callers:
  *  - the dashboard, via the Supabase session cookie (role-based)
- *  - the public API, via `Authorization: Bearer flw_live_...` (scope-based)
+  *  - the public API, via `Authorization: Bearer md_...` or `flw_live_...` (scope-based)
  *
  * Usage in a Route Handler:
  *   const auth = await requireWorkspaceAccess(req, params.workspaceId, "subscribers:write");
@@ -39,7 +39,7 @@ export async function requireWorkspaceAccess(
 ): Promise<AccessResult> {
   const authHeader = req.headers.get("authorization");
 
-  if (authHeader?.startsWith("Bearer flw_")) {
+  if (authHeader?.startsWith("Bearer flw_") || authHeader?.startsWith("Bearer md_")) {
     return authorizeApiKey(authHeader.slice("Bearer ".length), workspaceId, requiredScope);
   }
 

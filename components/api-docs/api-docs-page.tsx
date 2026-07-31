@@ -33,7 +33,7 @@ export function ApiDocsPage({ workspaceId }: { workspaceId: string }) {
         <h2 className="mb-1 text-sm font-semibold text-ink">Endpoints</h2>
         <p className="mb-4 text-sm text-ink-soft">
           All requests are scoped to this workspace and authenticated with{" "}
-          <code className="rounded bg-canvas px-1 py-0.5 font-mono text-xs break-all">Authorization: Bearer flw_live_…</code>
+          <code className="rounded bg-canvas px-1 py-0.5 font-mono text-xs break-all">Authorization: Bearer md_… / flw_live_…</code>
         </p>
         <EndpointBrowser workspaceId={workspaceId} defaultApiKey={lastCreatedKey} />
       </div>

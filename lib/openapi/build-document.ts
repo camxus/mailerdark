@@ -72,13 +72,13 @@ export function buildOpenApiDocument(baseUrl: string) {
       version: "1.0.0",
       description:
         "Programmatic access to subscribers, groups, fields, campaigns, automations, and sending domains. " +
-        "Authenticate with `Authorization: Bearer flw_live_...` using a key created under Settings → API.",
+        "Authenticate with `Authorization: Bearer md_...` or `flw_live_...` using a key created under Settings → API.",
     },
     servers: [{ url: baseUrl }],
     security: [{ ApiKeyAuth: [] }],
     components: {
       securitySchemes: {
-        ApiKeyAuth: { type: "http", scheme: "bearer", bearerFormat: "flw_live_..." },
+        ApiKeyAuth: { type: "http", scheme: "bearer", bearerFormat: "md_... / flw_live_..." },
       },
     },
     paths,
