@@ -8,6 +8,7 @@ export const ALL_SCOPES = [
   "automations:read",
   "automations:write",
   "settings:write",
+  "full-access:all",
 ] as const;
 
 export type ApiScope = (typeof ALL_SCOPES)[number];
