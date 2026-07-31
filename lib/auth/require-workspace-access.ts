@@ -9,7 +9,8 @@ export type WorkspaceScope =
   | "campaigns:write"
   | "automations:read"
   | "automations:write"
-  | "settings:write";
+  | "settings:write"
+  | "full_access:all";
 
 type AccessResult =
   | { ok: true; actor: { type: "user"; userId: string; role: string } | { type: "api_key"; apiKeyId: string } }
@@ -88,7 +89,7 @@ async function authorizeApiKey(
     return fail(401, "INVALID_API_KEY", "This API key is invalid or has been revoked.");
   }
 
-  if (!apiKey.scopes.includes(requiredScope)) {
+  if (!apiKey.scopes.includes("full_access:all") && !apiKey.scopes.includes(requiredScope)) {
     return fail(403, "INSUFFICIENT_SCOPE", `This API key is missing the "${requiredScope}" scope.`);
   }
 

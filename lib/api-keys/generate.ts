@@ -8,14 +8,23 @@ export const ALL_SCOPES = [
   "automations:read",
   "automations:write",
   "settings:write",
-  "full-access:all",
+  "full_access:all",
 ] as const;
 
 export type ApiScope = (typeof ALL_SCOPES)[number];
 
+function getKeyPrefix(): string {
+  const env = process.env.VERCEL_ENV;
+  if (env === "preview" || env === "development") {
+    return "md_";
+  }
+  return "flw_live_";
+}
+
 /** Returns { rawKey, hashedKey } — only rawKey is ever shown to the person, and only once. */
 export function generateApiKey(): { rawKey: string; hashedKey: string } {
-  const rawKey = `flw_live_${randomBytes(24).toString("hex")}`;
+  const prefix = getKeyPrefix();
+  const rawKey = `${prefix}${randomBytes(24).toString("hex")}`;
   const hashedKey = createHash("sha256").update(rawKey).digest("hex");
   return { rawKey, hashedKey };
 }
