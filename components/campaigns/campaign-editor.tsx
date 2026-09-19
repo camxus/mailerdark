@@ -15,7 +15,8 @@ import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { AudienceFilter, type AudienceValue } from "@/components/audience/audience-filter";
 import { TestSendDialog } from "./test-send-dialog";
 import { ScheduleDialog } from "./schedule-dialog";
-import { CampaignStatsModal } from "./campaign-stats-modal";
+import { CampaignStatsModal } from "@/components/campaigns/campaign-stats-modal";
+import { SendCampaignDialog } from "@/components/campaigns/send-campaign-dialog";
 import {
   useCampaign, useUpdateCampaign, useDeleteCampaign,
   usePreviewCampaign, useSendCampaignNow, usePauseCampaign,
@@ -73,7 +74,7 @@ function CampaignEditorForm({
   const continueSending = useContinueCampaignSending(workspaceId, campaignId);
   const sendFailed = useSendFailedCampaign(workspaceId, campaignId);
 
-  const isLive = campaign.status === "SENT" || campaign.status === "FAILED";
+  const isLive = campaign.status !== "DRAFT";
 
   const { data: stats } = useCampaignStats(workspaceId, campaignId, {
     pollMs: campaign.status === "SENDING" ? 4000 : undefined,
@@ -89,6 +90,7 @@ function CampaignEditorForm({
   const [showTestSend, setShowTestSend] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [sendDialog, setSendDialog] = useState<{ mode: "send" | "continue" | "failed" } | null>(null);
 
   // Live preview HTML — updated from the server when the editor is idle for 1.5s
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
@@ -98,7 +100,7 @@ function CampaignEditorForm({
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (isLive) return;
+    if (campaign.status !== "DRAFT") return;
     if (updateCampaign.isPending) return;
     if (sendNow.isPending) return;
 
@@ -117,7 +119,7 @@ function CampaignEditorForm({
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [subject, fromName, fromEmail, replyTo, htmlContent, audience, isLive, updateCampaign.isPending, sendNow.isPending]);
+  }, [subject, fromName, fromEmail, replyTo, htmlContent, audience, campaign.status, updateCampaign.isPending, sendNow.isPending]);
 
   // Debounce preview refresh
   useEffect(() => {
@@ -156,12 +158,12 @@ function CampaignEditorForm({
     router.push(`/w/${workspaceId}/campaigns/${result.id}/edit`);
   }
 
-  async function handleContinueSending() {
-    await continueSending.mutateAsync();
+  function handleContinueSending() {
+    setSendDialog({ mode: "continue" });
   }
 
-  async function handleSendFailed() {
-    await sendFailed.mutateAsync();
+  function handleSendFailed() {
+    setSendDialog({ mode: "failed" });
   }
 
   const anyError =
@@ -196,7 +198,7 @@ function CampaignEditorForm({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {campaign.status === "DRAFT" && (
+          {(campaign.status === "DRAFT") && (
             <button
               onClick={handleDelete}
               className="rounded-md p-2 text-ink-soft hover:bg-red-soft hover:text-red"
@@ -223,12 +225,20 @@ function CampaignEditorForm({
           {!isLive && (
             <Button
               onClick={async () => {
-                if (!confirm(campaign.status === "SENDING" ? "Resume sending this campaign?" : "Send this campaign now?")) return;
-                await sendNow.mutateAsync();
+                if (campaign.status === "PAUSED") {
+                  setSendDialog({ mode: "continue" });
+                } else {
+                  setSendDialog({ mode: "send" });
+                }
               }}
-              disabled={sendNow.isPending}
+              disabled={sendNow.isPending || continueSending.isPending || sendFailed.isPending}
             >
-              <Send size={15} /> {sendNow.isPending ? "Sending…" : campaign.status === "SENDING" ? "Resume" : "Send now"}
+              <Send size={15} />
+              {sendNow.isPending || continueSending.isPending || sendFailed.isPending
+                ? "Sending…"
+                : campaign.status === "PAUSED"
+                ? "Continue Sending"
+                : "Send now"}
             </Button>
           )}
           {(campaign.status === "SENDING" || campaign.status === "SCHEDULED") && (
@@ -316,6 +326,15 @@ function CampaignEditorForm({
         </Card>
       )}
 
+      {sendDialog && (
+        <SendCampaignDialog
+          workspaceId={workspaceId}
+          campaignId={campaignId}
+          mode={sendDialog.mode}
+          onClose={() => setSendDialog(null)}
+        />
+      )}
+
       {/* ── Tabs ── */}
       <div className="flex gap-1 border-b border-line">
         {(["compose", "audience"] as Tab[]).map((t) => (
@@ -341,34 +360,34 @@ function CampaignEditorForm({
             <div className="space-y-4">
               <div>
                 <Label htmlFor="subject">Subject</Label>
-                <Input
-                  id="subject"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  disabled={isLive}
-                  placeholder="Your subject line — {$first_name} merge fields work here"
-                />
+                  <Input
+                    id="subject"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    disabled={campaign.status !== "DRAFT"}
+                    placeholder="Your subject line — {$first_name} merge fields work here"
+                  />
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="fromName">From name</Label>
-                  <Input id="fromName" value={fromName} onChange={(e) => setFromName(e.target.value)} disabled={isLive} />
+                  <Input id="fromName" value={fromName} onChange={(e) => setFromName(e.target.value)} disabled={campaign.status !== "DRAFT"} />
                 </div>
                 <div>
                   <Label htmlFor="fromEmail">From email</Label>
-                  <Input id="fromEmail" type="email" value={fromEmail} onChange={(e) => setFromEmail(e.target.value)} disabled={isLive} />
+                  <Input id="fromEmail" type="email" value={fromEmail} onChange={(e) => setFromEmail(e.target.value)} disabled={campaign.status !== "DRAFT"} />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="replyTo">Reply-to (optional)</Label>
-                <Input id="replyTo" type="email" value={replyTo} onChange={(e) => setReplyTo(e.target.value)} disabled={isLive} />
-                <p className="mt-1.5 text-xs text-ink-soft">
-                  Verify DNS →{" "}
-                  <a href={`/w/${workspaceId}/settings/domains`} className="text-teal hover:text-teal-dark underline">
-                    Settings → Sending domains
-                  </a>
-                </p>
-              </div>
+                <div>
+                  <Label htmlFor="replyTo">Reply-to (optional)</Label>
+                  <Input id="replyTo" type="email" value={replyTo} onChange={(e) => setReplyTo(e.target.value)} disabled={campaign.status !== "DRAFT"} />
+                  <p className="mt-1.5 text-xs text-ink-soft">
+                    Verify DNS →{" "}
+                    <a href={`/w/${workspaceId}/settings/domains`} className="text-teal hover:text-teal-dark underline">
+                      Settings → Sending domains
+                    </a>
+                  </p>
+                </div>
             </div>
           </Card>
 

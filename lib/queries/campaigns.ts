@@ -203,11 +203,14 @@ export function usePauseCampaign(workspaceId: string, id: string) {
 
 export function useContinueCampaignSending(workspaceId: string, id: string) {
   const queryClient = useQueryClient();
-  return useMutation<SendCampaignResult, Error, void>({
-    mutationFn: () =>
+  return useMutation<SendCampaignResult, Error, string[] | undefined>({
+    mutationFn: (subscriberIds?: string[]) =>
       apiFetch<SendCampaignResult>(
         `/api/workspaces/${workspaceId}/campaigns/${id}/continue-sending`,
-        { method: "POST" }
+        {
+          method: "POST",
+          body: JSON.stringify({ subscriberIds }),
+        }
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: key.detail(workspaceId, id) });

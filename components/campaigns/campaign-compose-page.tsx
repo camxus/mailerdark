@@ -58,6 +58,7 @@ function CampaignComposeForm({
   const isLive = campaign.status !== "DRAFT";
 
   useEffect(() => {
+    if (isLive) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       await updateCampaign.mutateAsync({ htmlContent });
@@ -67,7 +68,7 @@ function CampaignComposeForm({
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [htmlContent, campaign.id, updateCampaign, previewCampaign]);
+  }, [htmlContent, campaign.id, isLive, updateCampaign, previewCampaign]);
 
   return (
     <div className="space-y-4">

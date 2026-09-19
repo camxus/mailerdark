@@ -51,7 +51,8 @@ export async function dispatchCampaign(
 
 export async function continueCampaignSending(
   workspaceId: string,
-  campaignId: string
+  campaignId: string,
+  subscriberIds?: string[]
 ): Promise<SendCampaignResult> {
   const campaign = await db.campaign.findFirst({
     where: { id: campaignId, workspaceId },
@@ -75,14 +76,18 @@ export async function continueCampaignSending(
   const sentIds = new Set(sentJobSubscribers.map((j) => j.subscriberId));
   const remaining = subscribers.filter((s) => !sentIds.has(s.id));
 
-  if (remaining.length === 0) {
+  const targetSubscribers = subscriberIds
+    ? remaining.filter((s) => subscriberIds.includes(s.id))
+    : remaining;
+
+  if (targetSubscribers.length === 0) {
     await db.campaign.update({
       where: { id: campaignId },
       data: { status: "SENT", sentAt: new Date() },
     });
     return {
-      totalRecipients: subscribers.length,
-      sentCount: subscribers.length,
+      totalRecipients: targetSubscribers.length,
+      sentCount: targetSubscribers.length,
       failedCount: 0,
       results: [],
       remaining: 0,
@@ -97,11 +102,11 @@ export async function continueCampaignSending(
   const existingJobs = await db.emailJob.findMany({
     where: {
       campaignId,
-      subscriberId: { in: remaining.map((s) => s.id) },
+      subscriberId: { in: targetSubscribers.map((s) => s.id) },
     },
   });
 
-  return sendSubscribers(workspaceId, campaign, remaining, existingJobs);
+  return sendSubscribers(workspaceId, campaign, targetSubscribers, existingJobs);
 }
 
 export async function sendFailedRecipients(
