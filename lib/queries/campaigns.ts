@@ -56,6 +56,14 @@ export type CampaignRecipient = {
   clicks: number;
 };
 
+export type SendCampaignResult = {
+  totalRecipients: number;
+  sentCount: number;
+  failedCount: number;
+  results: { email: string; status: "SENT" | "FAILED"; error?: string }[];
+  remaining: number;
+};
+
 const key = {
   list: (workspaceId: string) => ["campaigns", workspaceId],
   detail: (workspaceId: string, id: string) => ["campaign", workspaceId, id],
@@ -167,9 +175,9 @@ export function useScheduleCampaign(workspaceId: string, id: string) {
 
 export function useSendCampaignNow(workspaceId: string, id: string) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<SendCampaignResult, Error, void>({
     mutationFn: () =>
-      apiFetch<{ totalRecipients: number; sentCount: number; failedCount: number }>(
+      apiFetch<SendCampaignResult>(
         `/api/workspaces/${workspaceId}/campaigns/${id}/send-now`,
         { method: "POST" }
       ),
@@ -183,12 +191,44 @@ export function useSendCampaignNow(workspaceId: string, id: string) {
 
 export function usePauseCampaign(workspaceId: string, id: string) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<Campaign, Error, void>({
     mutationFn: () =>
       apiFetch<Campaign>(`/api/workspaces/${workspaceId}/campaigns/${id}/pause`, { method: "POST" }),
     onSuccess: (data) => {
       queryClient.setQueryData(key.detail(workspaceId, id), data);
       queryClient.invalidateQueries({ queryKey: key.list(workspaceId) });
+    },
+  });
+}
+
+export function useContinueCampaignSending(workspaceId: string, id: string) {
+  const queryClient = useQueryClient();
+  return useMutation<SendCampaignResult, Error, void>({
+    mutationFn: () =>
+      apiFetch<SendCampaignResult>(
+        `/api/workspaces/${workspaceId}/campaigns/${id}/continue-sending`,
+        { method: "POST" }
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: key.detail(workspaceId, id) });
+      queryClient.invalidateQueries({ queryKey: key.list(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: key.stats(workspaceId, id) });
+    },
+  });
+}
+
+export function useSendFailedCampaign(workspaceId: string, id: string) {
+  const queryClient = useQueryClient();
+  return useMutation<SendCampaignResult, Error, void>({
+    mutationFn: () =>
+      apiFetch<SendCampaignResult>(
+        `/api/workspaces/${workspaceId}/campaigns/${id}/send-failed`,
+        { method: "POST" }
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: key.detail(workspaceId, id) });
+      queryClient.invalidateQueries({ queryKey: key.list(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: key.stats(workspaceId, id) });
     },
   });
 }

@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Send, Calendar, Pause, Trash2,
-  MoreHorizontal, MailX, UserPlus, Copy, BarChart3,
+  MoreHorizontal, MailX, UserPlus, Copy, BarChart3, RefreshCw, AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,6 +20,7 @@ import {
   useCampaign, useUpdateCampaign, useDeleteCampaign,
   usePreviewCampaign, useSendCampaignNow, usePauseCampaign,
   useCampaignStats, useResendCampaign,
+  useContinueCampaignSending, useSendFailedCampaign,
   type CampaignStatus, type ResendMode,
 } from "@/lib/queries/campaigns";
 
@@ -69,6 +70,8 @@ function CampaignEditorForm({
   const sendNow = useSendCampaignNow(workspaceId, campaignId);
   const pauseCampaign = usePauseCampaign(workspaceId, campaignId);
   const resendCampaign = useResendCampaign(workspaceId, campaignId);
+  const continueSending = useContinueCampaignSending(workspaceId, campaignId);
+  const sendFailed = useSendFailedCampaign(workspaceId, campaignId);
 
   const isLive = campaign.status === "SENT" || campaign.status === "FAILED";
 
@@ -153,9 +156,19 @@ function CampaignEditorForm({
     router.push(`/w/${workspaceId}/campaigns/${result.id}/edit`);
   }
 
+  async function handleContinueSending() {
+    await continueSending.mutateAsync();
+  }
+
+  async function handleSendFailed() {
+    await sendFailed.mutateAsync();
+  }
+
   const anyError =
     updateCampaign.error?.message ||
     sendNow.error?.message ||
+    continueSending.error?.message ||
+    sendFailed.error?.message ||
     resendCampaign.error?.message;
 
   return (
@@ -230,12 +243,37 @@ function CampaignEditorForm({
           {(campaign.status === "SENT" || campaign.status === "FAILED" || campaign.status === "PAUSED") && (
             <DropdownMenu
               trigger={
-                <Button variant="secondary" disabled={resendCampaign.isPending}>
+                <Button
+                  variant="secondary"
+                  disabled={resendCampaign.isPending || continueSending.isPending || sendFailed.isPending}
+                >
                   <Send size={15} />
-                  {resendCampaign.isPending ? "Creating…" : "Send again"}
+                  {campaign.status === "PAUSED" ? "Continue Sending" : "Send again"}
                 </Button>
               }
               items={[
+                ...(campaign.status === "PAUSED"
+                  ? [
+                      {
+                        label: "Continue Sending",
+                        description: "Resume sending remaining recipients directly",
+                        icon: <RefreshCw size={15} />,
+                        onClick: handleContinueSending,
+                        disabled: continueSending.isPending,
+                      },
+                    ]
+                  : []),
+                ...((stats?.failed ?? 0) > 0
+                  ? [
+                      {
+                        label: "Send to all failed",
+                        description: "Resend directly to every recipient whose previous send failed",
+                        icon: <AlertCircle size={15} />,
+                        onClick: handleSendFailed,
+                        disabled: sendFailed.isPending,
+                      },
+                    ]
+                  : []),
                 {
                   label: "Send to failed",
                   description: "Only recipients whose previous send failed, as a new draft",
@@ -334,13 +372,13 @@ function CampaignEditorForm({
             </div>
           </Card>
 
-          <SplitEditorPane
+          {/* <SplitEditorPane
             workspaceId={workspaceId}
             value={htmlContent}
             onChange={setHtmlContent}
             previewHtml={previewHtml}
             disabled={isLive}
-          />
+          /> */}
         </div>
       )}
 
